@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AdmiRank – DU Admission Model Tests</title>
+<meta name="description" content="Online model tests, previous year questions and live ranking for DU admission candidates.">
+<link rel="icon" href="assets/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/common.css">
+<link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+<header class="nav" id="nav">
+  <a class="brand" href="index.html"><img src="assets/logo.jpg" alt="" width="40" height="40"><span>AdmiRank</span></a>
+  <nav id="menu" aria-label="Main">
+    <a href="#courses" data-i18n="nav_courses">Courses</a>
+    <a href="#demo" data-i18n="nav_demo">Free demo</a>
+    <a href="#features" data-i18n="nav_features">Features</a>
+    <a href="#how" data-i18n="nav_how">How it works</a>
+  </nav>
+  <div class="tools">
+    <button class="icon" id="langBtn" aria-label="Language">বাং</button>
+    <button class="icon" id="themeBtn" aria-label="Toggle theme">◐</button>
+    <a class="btn ghost" href="login.html" data-i18n="login">Log in</a>
+    <a class="btn" href="register.html" data-i18n="register">Register</a>
+    <button class="icon burger" id="burger" aria-label="Menu" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main>
+<!-- HERO CAROUSEL -->
+<section class="hero" aria-roledescription="carousel" aria-label="Featured batches">
+  <div class="track" id="track">
+    <a class="slide" href="courses/du-a.html"><img src="assets/banner-du-a.webp" alt="DU A Final Model Test Batch – 30 final model tests, 499 taka" width="1600" height="533" fetchpriority="high"></a>
+    <a class="slide promo p2" href="#demo">
+      <div><h2 data-i18n="s2_t">Try a full exam free</h2><p data-i18n="s2_p">Take a demo model test, get your rank and a full analysis before you buy anything.</p><span class="btn gold" data-i18n="s2_b">Start free demo</span></div>
+      <div class="big" aria-hidden="true">FREE</div>
+    </a>
+    <a class="slide promo p3" href="#features">
+      <div><h2 data-i18n="s3_t">Know exactly where you stand</h2><p data-i18n="s3_p">Live merit position, subject-wise rank and a progress graph after every test.</p><span class="btn gold" data-i18n="s3_b">See how it works</span></div>
+      <div class="big" aria-hidden="true">#1</div>
+    </a>
+  </div>
+  <button class="arrow prev" id="prev" aria-label="Previous slide">‹</button>
+  <button class="arrow next" id="next" aria-label="Next slide">›</button>
+  <div class="dots" id="dots"></div>
+</section>
+
+<!-- COURSES -->
+<section class="wrap" id="courses">
+  <div class="head"><h2 data-i18n="explore">Explore courses</h2><p data-i18n="explore_p">Pick your admission test and start practising with real exam conditions.</p></div>
+  <div class="grid">
+    <a class="course" href="courses/du-a.html" style="--c:#8b1a24">
+      <div class="art"><b>DU</b><i>A</i></div>
+      <div class="body"><h3>DU A</h3><p data-i18n="c_dua">Final model tests, subject-wise practice and previous year questions.</p>
+        <ul><li data-i18n="c_li1">30 final model tests</li><li data-i18n="c_li2">MCQ + written, Bangla &amp; English</li><li data-i18n="c_li3">Live rank &amp; analysis</li></ul>
+        <div class="foot"><span class="price">৳499</span><span class="go" data-i18n="view">View batch</span></div></div>
+    </a>
+    <a class="course" href="courses/du-b.html" style="--c:#0b1f4d">
+      <div class="art"><b>DU</b><i>B</i></div>
+      <div class="body"><h3>DU B</h3><p data-i18n="c_dub">Model tests and chapter-wise practice for DU B candidates.</p>
+        <ul><li data-i18n="c_li4">Scheduled model tests</li><li data-i18n="c_li2">MCQ + written, Bangla &amp; English</li><li data-i18n="c_li3">Live rank &amp; analysis</li></ul>
+        <div class="foot"><span class="price soon" data-i18n="soon">Coming soon</span><span class="go" data-i18n="view">View batch</span></div></div>
+    </a>
+    <a class="course" href="courses/gst.html" style="--c:#b7790a">
+      <div class="art"><b>GST</b><i>★</i></div>
+      <div class="body"><h3>GST</h3><p data-i18n="c_gst">Full-length mock tests for the GST cluster admission test.</p>
+        <ul><li data-i18n="c_li5">Full admission mocks</li><li data-i18n="c_li2">MCQ + written, Bangla &amp; English</li><li data-i18n="c_li3">Live rank &amp; analysis</li></ul>
+        <div class="foot"><span class="price soon" data-i18n="soon">Coming soon</span><span class="go" data-i18n="view">View batch</span></div></div>
+    </a>
+    <a class="course" href="courses/agri.html" style="--c:#1d6b3a">
+      <div class="art"><b>AG</b><i>RI</i></div>
+      <div class="body"><h3>AGRI</h3><p data-i18n="c_agri">Practice tests for the Agricultural cluster admission test.</p>
+        <ul><li data-i18n="c_li5">Full admission mocks</li><li data-i18n="c_li2">MCQ + written, Bangla &amp; English</li><li data-i18n="c_li3">Live rank &amp; analysis</li></ul>
+        <div class="foot"><span class="price soon" data-i18n="soon">Coming soon</span><span class="go" data-i18n="view">View batch</span></div></div>
+    </a>
+  </div>
+</section>
+
+<!-- DEMO CTA -->
+<section class="wrap" id="demo">
+  <div class="cta">
+    <div><h2 data-i18n="demo_t">Not sure yet? Take a free demo.</h2><p data-i18n="demo_p">Sit one real model test, see your rank, and read the explanations. No payment needed.</p></div>
+    <a class="btn gold lg" href="register.html" data-i18n="demo_b">Start free demo</a>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="wrap" id="features">
+  <div class="head"><h2 data-i18n="feat">Built for serious preparation</h2><p data-i18n="feat_p">Everything you need to practise like the real DU admission test and learn from every attempt.</p></div>
+  <div class="feats">
+    <div><h3 data-i18n="f1">Real exam timing</h3><p data-i18n="f1p">Timed tests with a question palette, mark for review, and answers that save the moment you pick them.</p></div>
+    <div><h3 data-i18n="f2">Resume anytime</h3><p data-i18n="f2p">Closed the browser or lost internet? Come back and continue exactly where you stopped.</p></div>
+    <div><h3 data-i18n="f3">Merit position</h3><p data-i18n="f3p">Overall and subject-wise rank against every student, with a public leaderboard once results are out.</p></div>
+    <div><h3 data-i18n="f4">Deep analysis</h3><p data-i18n="f4p">Accuracy, time per question, strong and weak subjects, explanations and a progress graph.</p></div>
+    <div><h3 data-i18n="f5">MCQ and written</h3><p data-i18n="f5p">Upload photos of your written answers and get them checked by teachers.</p></div>
+    <div><h3 data-i18n="f6">Bangla and English</h3><p data-i18n="f6p">Switch language anytime. Questions and explanations come in both.</p></div>
+  </div>
+</section>
+
+<!-- HOW -->
+<section class="wrap" id="how">
+  <div class="head"><h2 data-i18n="how">Start in three steps</h2></div>
+  <ol class="steps">
+    <li><h3 data-i18n="h1">Create your account</h3><p data-i18n="h1p">Register with your phone and email and choose your target unit. You get a student ID instantly.</p></li>
+    <li><h3 data-i18n="h2">Join a batch</h3><p data-i18n="h2p">Try a free demo or enrol in a batch with bKash, Nagad, Rocket or card.</p></li>
+    <li><h3 data-i18n="h3">Take tests, climb the rank</h3><p data-i18n="h3p">Sit scheduled exams, review your analysis and watch your merit position improve.</p></li>
+  </ol>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <a class="brand" href="index.html"><img src="assets/logo.jpg" alt="" width="36" height="36"><span>AdmiRank</span></a>
+    <p class="mu" data-i18n="tag">Online model tests for DU admission candidates.</p>
+    <p class="mu">© <span id="yr"></span> AdmiRank</p>
+  </div>
+</footer>
+<script src="js/common.js"></script>
+<script src="js/home.js"></script>
+</body>
+</html>
