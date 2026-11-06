@@ -1,0 +1,72 @@
+:root{--bg:#f6f7fb;--sf:#fff;--tx:#0b1f4d;--mu:#5b6685;--br:#e3e7f1;--navy:#0b1f4d;--gold:#fbb513;--red:#8b1a24;--sh:0 10px 30px -12px rgba(11,31,77,.25)}
+[data-theme=dark]{--bg:#070d1c;--sf:#0e172d;--tx:#eef2fb;--mu:#98a3c2;--br:#1c2845;--navy:#0e172d;--sh:0 10px 30px -12px rgba(0,0,0,.6)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#070d1c;--sf:#0e172d;--tx:#eef2fb;--mu:#98a3c2;--br:#1c2845;--navy:#0e172d;--sh:0 10px 30px -12px rgba(0,0,0,.6)}}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 "Hind Siliguri",system-ui,sans-serif}
+h1,h2,h3,.brand span,.price,.btn{font-family:Outfit,"Hind Siliguri",sans-serif}
+a{color:inherit;text-decoration:none}img{max-width:100%;display:block}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.mu{color:var(--mu)}
+.wrap{max-width:1160px;margin:0 auto;padding:56px 20px}
+/* nav */
+.nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:20px;padding:10px max(20px,calc((100vw - 1160px)/2));background:color-mix(in srgb,var(--sf) 88%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--br)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:21px}.brand img{border-radius:10px}
+#menu{display:flex;gap:22px;margin-left:18px;font-weight:500}#menu a{color:var(--mu)}#menu a:hover{color:var(--tx)}
+.tools{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn{display:inline-block;background:var(--navy);color:#fff;border:0;border-radius:10px;padding:9px 18px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s}
+[data-theme=dark] .btn:not(.gold):not(.ghost){background:var(--gold);color:#0b1f4d}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+.btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--br)}
+.btn.gold{background:var(--gold);color:#0b1f4d}.btn.lg{padding:14px 28px;font-size:17px}
+.icon{background:transparent;border:1px solid var(--br);color:var(--tx);border-radius:10px;min-width:40px;height:40px;cursor:pointer;font:600 15px "Hind Siliguri"}
+.burger{display:none}
+/* hero carousel */
+.hero{position:relative;max-width:1240px;margin:20px auto 0;padding:0 20px}
+.track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:20px;box-shadow:var(--sh)}
+.track::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;scroll-snap-align:start;aspect-ratio:3/1;min-height:150px;position:relative}
+.slide img{width:100%;height:100%;object-fit:cover}
+.promo{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 6%;color:#fff;overflow:hidden}
+.p2{background:linear-gradient(110deg,#0b1f4d 55%,#8b1a24)}.p3{background:linear-gradient(110deg,#0b1f4d 50%,#1b3f8f)}
+.promo h2{font-size:clamp(17px,3.2vw,38px);line-height:1.15;margin:0 0 6px;max-width:15em}
+.promo p{margin:0 0 12px;max-width:34em;font-size:clamp(11px,1.5vw,17px);color:#d5dcf0}
+.promo .btn{font-size:clamp(11px,1.4vw,16px);padding:7px 16px}
+.big{font:800 clamp(60px,16vw,190px)/1 Outfit;color:rgba(251,181,19,.9);letter-spacing:-.04em}
+.arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#0b1f4d;font-size:26px;cursor:pointer;box-shadow:var(--sh)}
+.prev{left:30px}.next{right:30px}
+.dots{display:flex;justify-content:center;gap:8px;margin-top:12px}
+.dots button{width:9px;height:9px;border-radius:9px;border:0;background:var(--br);cursor:pointer;padding:0;transition:width .25s,background .25s}
+.dots button.on{width:28px;background:var(--gold)}
+/* sections */
+.head{margin-bottom:28px}.head h2{font-size:clamp(26px,4vw,38px);margin:0 0 6px;letter-spacing:-.02em}.head p{margin:0;color:var(--mu);max-width:42em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.course{background:var(--sf);border:1px solid var(--br);border-radius:18px;overflow:hidden;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s}
+.course:hover{transform:translateY(-5px);box-shadow:var(--sh)}
+.art{background:var(--c);color:#fff;height:130px;display:flex;align-items:flex-end;padding:0 20px;position:relative;overflow:hidden;font-family:Outfit}
+.art::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 2px,transparent 2px 22px),repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 2px,transparent 2px 44px)}
+.art b{font-size:30px;font-weight:700;opacity:.85;position:relative;margin-bottom:12px;margin-right:6px}.art i{font:800 96px/.8 Outfit;font-style:normal;position:relative;margin-bottom:6px;color:var(--gold)}
+.body{padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}.body h3{margin:0;font-size:24px}.body p{color:var(--mu);margin:4px 0 10px;font-size:15px}
+.body ul{margin:0 0 16px;padding:0;list-style:none;font-size:14.5px}.body li{padding:3px 0 3px 22px;position:relative}.body li::before{content:"✓";position:absolute;left:0;color:var(--c);font-weight:800}
+[data-theme=dark] .body li::before{color:var(--gold)}
+.foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between}
+.price{font-size:24px;font-weight:800;color:var(--red)}[data-theme=dark] .price{color:var(--gold)}.price.soon{font-size:15px;color:var(--mu)}
+.go{font-weight:700;border-bottom:2px solid var(--gold)}
+.cta{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;background:var(--navy);color:#fff;border-radius:22px;padding:34px clamp(22px,5vw,48px);border-left:10px solid var(--gold)}
+.cta h2{margin:0 0 4px;font-size:clamp(22px,3.4vw,32px)}.cta p{margin:0;color:#c9d2ec;max-width:36em}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0;border-top:1px solid var(--br)}
+.feats div{padding:24px 22px 24px 0;border-bottom:1px solid var(--br)}.feats h3{margin:0 0 4px;font-size:19px}.feats p{margin:0;color:var(--mu)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.steps li{counter-increment:s;background:var(--sf);border:1px solid var(--br);border-radius:16px;padding:22px;position:relative}
+.steps li::before{content:counter(s);position:absolute;top:-16px;left:18px;width:34px;height:34px;border-radius:50%;background:var(--gold);color:#0b1f4d;font:800 17px/34px Outfit;text-align:center}
+.steps h3{margin:8px 0 4px}.steps p{margin:0;color:var(--mu)}
+footer{border-top:1px solid var(--br);background:var(--sf)}.foot-in{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:28px 20px}.foot-in p{margin:0}.foot-in .mu:last-child{margin-left:auto}
+/* one entrance: course cards on load */
+.grid .course{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}.grid .course:nth-child(2){animation-delay:.08s}.grid .course:nth-child(3){animation-delay:.16s}.grid .course:nth-child(4){animation-delay:.24s}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}}
+@media(max-width:860px){
+ .burger{display:inline-block}.tools .btn.ghost{display:none}
+ #menu{position:absolute;top:100%;left:0;right:0;background:var(--sf);border-bottom:1px solid var(--br);flex-direction:column;gap:0;margin:0;padding:6px 20px;display:none}
+ #menu.open{display:flex}#menu a{padding:12px 0;border-bottom:1px solid var(--br)}
+ .arrow{display:none}.hero{padding:0 12px}.wrap{padding:40px 16px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
