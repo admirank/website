@@ -77,28 +77,80 @@ async function adminExamPreview(id){
   $('#app').innerHTML=shell(`<div class="page-title"><div><a href="#exam-info/${id}" class="muted">← Back to exam</a><h1>${esc(exam.title)} — Question preview</h1><p>Admin-only preview. Schedule restrictions do not apply; no student attempt is started.</p></div></div><section class="panel"><div class="panel-head"><h3>${questions.length} questions · ${esc(exam.total_marks??'—')} total marks</h3></div>${body}</section>`,'my-exams');
 }
 async function startExam(id){try{let r=await rpc('start_exam',{p_exam_id:id});let data=Array.isArray(r)?r[0]:r;if(data?.error)throw Error(data.error);let attemptId=data?.attempt_id||data?.id||data?.p_attempt_id;if(!attemptId)throw Error(data?.message||'The server did not return an attempt ID.');state.attempt={id:attemptId,...data};let loaded=await rpc('load_exam_questions',{p_attempt_id:attemptId});let payload=Array.isArray(loaded)?loaded[0]:loaded;state.questions=payload.questions||payload.exam_questions||[];if(!state.questions.length&&Array.isArray(payload))state.questions=payload;state.answers={};(payload.answers||[]).forEach(a=>state.answers[a.exam_question_id]={selected_option_id:a.selected_option_id,written_answer_text:a.written_answer_text,answer_image_path:a.answer_image_path});state.questions.forEach(q=>{if(q.saved_answer)state.answers[q.id]={selected_option_id:q.saved_answer.selected_option_id,written_answer_text:q.saved_answer.written_answer_text,answer_image_path:q.saved_answer.answer_image_path}});state.qIndex=0;state.remaining=Math.max(0,Math.floor((new Date(payload.expires_at||state.attempt.expires_at||Date.now()+3600000)-Date.now())/1000));state.page='exam-run';renderExam();}catch(e){err(e)}}
-function renderExam(){let q=state.questions[state.qIndex];if(!q){toast('No examination questions were returned.',true);go('my-exams');return}let opts=q.options||q.exam_question_options||[];$('#app').innerHTML=`<div class="app-shell"><main class="main-area"><header class="dash-top"><strong>${esc(state.exam?.title||'Examination in progress')}</strong><div>${status('in_progress')}</div></header><div class="dash-content"><div class="exam-layout"><section class="panel question-card"><div class="question-number">QUESTION ${state.qIndex+1} OF ${state.questions.length} · ${esc(q.question_type||'mcq').toUpperCase()}</div><div class="question-text">${esc(q.question_text_snapshot||q.question_text||'')}</div>${opts.length?opts.map(o=>`<label class="option ${(state.answers[q.id]?.selected_option_id===o.id)?'selected':''}"><input type="radio" name="answer" value="${o.id}" ${state.answers[q.id]?.selected_option_id===o.id?'checked':''}><span><strong>${esc(o.option_label||'')}</strong> ${esc(o.option_text||'')}</span></label>`).join(''):`<div class="field"><label>Your written answer</label><textarea id="written-answer" placeholder="Write your answer here…">${esc(state.answers[q.id]?.written_answer_text||'')}</textarea></div><div class="answer-upload"><label>Upload answer image/PDF (max 15 MB)<br><input id="answer-file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"></label><small>Private answer-script storage</small></div>`}<div style="display:flex;justify-content:space-between;gap:12px;margin-top:28px"><button class="btn btn-outline" id="prev-q" ${state.qIndex===0?'disabled':''}>← Previous</button><button class="btn btn-primary" id="next-q">${state.qIndex===state.questions.length-1?'Review answers':'Save & next →'}</button></div></section><aside class="exam-side"><section class="panel"><div class="muted" style="text-align:center;font-weight:700">TIME REMAINING</div><div class="timer" id="timer">--:--</div><div class="question-palette">${state.questions.map((x,i)=>`<button class="qdot ${i===state.qIndex?'current':''} ${state.answers[x.id]?'done':''}" data-q="${i}">${i+1}</button>`).join('')}</div><p class="muted" style="font-size:11px;margin-top:14px">Green indicates an answered question.</p><button class="btn btn-danger" id="submit-exam" style="width:100%;margin-top:12px">Submit examination</button></section></aside></div></div></main></div>`;$$('input[name=answer]').forEach(el=>el.addEventListener('change',async()=>{state.answers[q.id]={...(state.answers[q.id]||{}),selected_option_id:el.value};await saveAnswer(q)}));$('#written-answer')?.addEventListener('blur',async e=>{state.answers[q.id]={...(state.answers[q.id]||{}),written_answer_text:e.target.value};await saveAnswer(q)});$('#answer-file')?.addEventListener('change',async e=>uploadAnswer(q,e.target.files[0]));$('#prev-q').onclick=()=>{state.qIndex--;renderExam()};$('#next-q').onclick=async()=>{await saveCurrent();if(state.qIndex<state.questions.length-1){state.qIndex++;renderExam()}else toast('Review your answers, then submit when ready.')};$$('[data-q]').forEach(b=>b.onclick=async()=>{await saveCurrent();state.qIndex=Number(b.dataset.q);renderExam()});$('#submit-exam').onclick=submitExam;tickTimer()}
-async function saveAnswer(q){try{let a=state.answers[q.id]||{};await rpc('save_exam_answer',{p_attempt_id:state.attempt.id,p_exam_question_id:q.id,p_selected_option_id:a.selected_option_id||null,p_written_answer_text:a.written_answer_text||null,p_answer_image_path:a.answer_image_path||null})}catch(e){err(e)}}
+function renderExam(){let q=state.questions[state.qIndex];if(!q){toast('No examination questions were returned.',true);go('my-exams');return}let opts=q.options||q.exam_question_options||[];$('#app').innerHTML=`<div class="app-shell"><main class="main-area"><header class="dash-top"><strong>${esc(state.exam?.title||'Examination in progress')}</strong><div>${status('in_progress')}</div></header><div class="dash-content"><div class="exam-layout"><section class="panel question-card"><div class="question-number">QUESTION ${state.qIndex+1} OF ${state.questions.length} · ${esc(q.question_type||'mcq').toUpperCase()}</div><div class="question-text">${esc(q.question_text_snapshot||q.question_text||'')}</div>${opts.length?opts.map(o=>`<label class="option ${(state.answers[q.id]?.selected_option_id===o.id)?'selected':''}"><input type="radio" name="answer" value="${o.id}" ${state.answers[q.id]?.selected_option_id===o.id?'checked':''}><span><strong>${esc(o.option_label||'')}</strong> ${esc(o.option_text||'')}</span></label>`).join(''):`<div class="field"><label>Your written answer</label><textarea id="written-answer" placeholder="Write your answer here…">${esc(state.answers[q.id]?.written_answer_text||'')}</textarea></div><div class="answer-upload"><label>Upload answer image/PDF (max 15 MB)<br><input id="answer-file" type="file" accept="image/*,application/pdf"><br><button type="button" class="btn btn-outline btn-sm" id="answer-camera-button" style="margin-top:8px">Take photo with camera</button><input id="answer-camera-file" type="file" accept="image/*" capture="environment" style="display:none"><div id="answer-upload-status" role="status" aria-live="polite" style="margin-top:8px;font-size:13px"></div></label><small>Private answer-script storage</small></div>`}<div style="display:flex;justify-content:space-between;gap:12px;margin-top:28px"><button class="btn btn-outline" id="prev-q" ${state.qIndex===0?'disabled':''}>← Previous</button><button class="btn btn-primary" id="next-q">${state.qIndex===state.questions.length-1?'Review answers':'Save & next →'}</button></div></section><aside class="exam-side"><section class="panel"><div class="muted" style="text-align:center;font-weight:700">TIME REMAINING</div><div class="timer" id="timer">--:--</div><div class="question-palette">${state.questions.map((x,i)=>`<button class="qdot ${i===state.qIndex?'current':''} ${state.answers[x.id]?'done':''}" data-q="${i}">${i+1}</button>`).join('')}</div><p class="muted" style="font-size:11px;margin-top:14px">Green indicates an answered question.</p><button class="btn btn-danger" id="submit-exam" style="width:100%;margin-top:12px">Submit examination</button></section></aside></div></div></main></div>`;$$('input[name=answer]').forEach(el=>el.addEventListener('change',async()=>{state.answers[q.id]={...(state.answers[q.id]||{}),selected_option_id:el.value};await saveAnswer(q)}));$('#written-answer')?.addEventListener('blur',async e=>{state.answers[q.id]={...(state.answers[q.id]||{}),written_answer_text:e.target.value};await saveAnswer(q)});const galleryInput=$('#answer-file'),cameraInput=$('#answer-camera-file'),cameraButton=$('#answer-camera-button');
+if(galleryInput)galleryInput.addEventListener('change',async e=>{await uploadAnswer(q,e.target.files?.[0]);e.target.value=''});
+if(cameraButton&&cameraInput)cameraButton.addEventListener('click',()=>cameraInput.click());
+if(cameraInput)cameraInput.addEventListener('change',async e=>{await uploadAnswer(q,e.target.files?.[0]);e.target.value=''});$('#prev-q').onclick=()=>{state.qIndex--;renderExam()};$('#next-q').onclick=async()=>{await saveCurrent();if(state.qIndex<state.questions.length-1){state.qIndex++;renderExam()}else toast('Review your answers, then submit when ready.')};$$('[data-q]').forEach(b=>b.onclick=async()=>{await saveCurrent();state.qIndex=Number(b.dataset.q);renderExam()});$('#submit-exam').onclick=submitExam;tickTimer()}
+async function saveAnswer(q){try{let a=state.answers[q.id]||{};await rpc('save_exam_answer',{p_attempt_id:state.attempt.id,p_exam_question_id:q.id,p_selected_option_id:a.selected_option_id||null,p_written_answer_text:a.written_answer_text||null,p_answer_image_path:a.answer_image_path||null});return true}catch(e){err(e);return false}}
 async function saveCurrent(){let q=state.questions[state.qIndex];if(q&&$('#written-answer'))state.answers[q.id]={...(state.answers[q.id]||{}),written_answer_text:$('#written-answer').value};if(q)await saveAnswer(q)}
+function setAnswerUploadStatus(message,isError=false){
+  const el=$('#answer-upload-status');
+  if(el){el.textContent=message;el.style.color=isError?'#dc2626':'var(--success,#16834a)'}
+}
+async function prepareAnswerFile(file){
+  if(!file)throw Error('No file was selected.');
+  if(file.size>15*1024*1024)throw Error('File exceeds 15 MB. Choose a smaller image or PDF.');
+  let type=(file.type||'').toLowerCase();
+  const ext=(file.name||'').split('.').pop().toLowerCase();
+  const extTypes={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',pdf:'application/pdf',heic:'image/heic',heif:'image/heif',avif:'image/avif'};
+  if(!type||type==='application/octet-stream')type=extTypes[ext]||type;
+  if(type==='application/pdf'){
+    if(file.size>15*1024*1024)throw Error('PDF exceeds 15 MB.');
+    return {file,type:'application/pdf',extension:'pdf'};
+  }
+  if(['image/jpeg','image/png','image/webp'].includes(type)){
+    const extension=type==='image/jpeg'?'jpg':type.split('/')[1];
+    return {file,type,extension};
+  }
+  if(type.startsWith('image/')){
+    // Mobile devices may return HEIC/HEIF/AVIF. Convert when this browser can decode it.
+    try{
+      if(!window.createImageBitmap)throw Error('Image conversion is not supported by this browser.');
+      const bitmap=await createImageBitmap(file);
+      const canvas=document.createElement('canvas');
+      canvas.width=bitmap.width;canvas.height=bitmap.height;
+      const ctx=canvas.getContext('2d');
+      if(!ctx)throw Error('Could not process this image.');
+      ctx.drawImage(bitmap,0,0);bitmap.close?.();
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',0.88));
+      if(!blob)throw Error('Could not convert this photo to JPG.');
+      const converted=new File([blob],`${(file.name||'answer').replace(/\.[^.]+$/,'')}.jpg`,{type:'image/jpeg',lastModified:Date.now()});
+      return {file:converted,type:'image/jpeg',extension:'jpg'};
+    }catch(e){
+      throw Error('This phone selected a HEIC/HEIF or unsupported image. Please change the camera format to JPG, or save/export the photo as JPG and upload it again.');
+    }
+  }
+  throw Error('Unsupported file. Please choose a JPG, PNG, WebP image or PDF.');
+}
 async function uploadAnswer(q,file){
   if(!file)return;
-  if(file.size>15*1024*1024){toast('File exceeds 15 MB.',true);return}
-  const allowed=['image/jpeg','image/png','image/webp','application/pdf'];
-  if(!allowed.includes(file.type)){toast('Unsupported file format.',true);return}
+  const input=$('#answer-file'),cameraInput=$('#answer-camera-file');
+  if(input)input.disabled=true;if(cameraInput)cameraInput.disabled=true;
+  setAnswerUploadStatus('Preparing your answer file…');
   try{
-    const uid=state.user.id;
-    // Must match the answer-scripts Storage INSERT policy:
-    // <auth.uid()>/<attempt_id>/<filename>
-    const path=`${uid}/${state.attempt.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-    const up=await sb.storage.from('answer-scripts').upload(path,file,{
-      upsert:false,
-      contentType:file.type
+    const prepared=await prepareAnswerFile(file);
+    const uid=state.user?.id,attemptId=state.attempt?.id;
+    if(!uid||!attemptId)throw Error('Your exam session could not be verified. Your exam has not been submitted. Please stay on this page and contact the administrator.');
+    // Storage policy requires: <auth.uid()>/<attempt_id>/<filename>
+    const safeName=(prepared.file.name||`answer.${prepared.extension}`).replace(/[^a-zA-Z0-9._-]/g,'_');
+    const path=`${uid}/${attemptId}/${Date.now()}-${safeName}`;
+    setAnswerUploadStatus('Uploading… please keep this exam page open.');
+    const up=await sb.storage.from('answer-scripts').upload(path,prepared.file,{
+      upsert:false,contentType:prepared.type,cacheControl:'3600'
     });
     if(up.error)throw up.error;
     state.answers[q.id]={...(state.answers[q.id]||{}),answer_image_path:path};
-    await saveAnswer(q);
+    const saved=await saveAnswer(q);
+    if(saved===false)throw Error('The file uploaded, but the answer record could not be saved. Your exam is still open; please retry or contact the administrator.');
+    setAnswerUploadStatus('Answer file uploaded and saved successfully.');
     toast('Answer file uploaded.');
-  }catch(e){err(e)}
+  }catch(e){
+    console.error('Answer upload failed:',e);
+    setAnswerUploadStatus(e?.message||'Upload failed. Your exam is still open.',true);
+    toast(e?.message||'Answer upload failed. Your exam is still open.',true);
+  }finally{
+    if(input)input.disabled=false;if(cameraInput)cameraInput.disabled=false;
+  }
 }
 let timerInterval;
 function tickTimer(){clearInterval(timerInterval);const update=()=>{let t=state.remaining;let el=$('#timer');if(!el)return;el.textContent=`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;if(t<=0){clearInterval(timerInterval);submitExam(true)}else state.remaining--};update();timerInterval=setInterval(update,1000)}
