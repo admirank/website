@@ -39,3 +39,7 @@
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.exam-create-modal{width:min(720px,96vw)}
 :root[data-theme="light"] .home-banner{background:#f4f8fa}
 @media(max-width:600px){.form-grid{grid-template-columns:1fr}.theme-toggle{font-size:11px;padding:8px}.home-banner img{min-height:130px;object-fit:cover}}
+
+/* Course detail route layout */
+.course-detail-page{max-width:1320px;margin:0 auto}.course-detail-grid{grid-template-columns:minmax(0,1.4fr) minmax(280px,.8fr)!important}.course-detail-summary{position:sticky;top:96px}.course-detail-summary .course-cover{height:220px}.course-detail-page .course-extra{padding:22px;background:var(--white);border:1px solid var(--line);border-radius:16px}.course-detail-page .course-extra h2{margin-top:0}.course-detail-page .table-wrap{margin-top:12px}
+@media(max-width:720px){.course-detail-grid{grid-template-columns:1fr!important}.course-detail-summary{position:static;grid-row:1}.course-detail-summary .course-cover{height:170px}.course-detail-page h1{font-size:30px!important}}

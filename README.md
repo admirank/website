@@ -100,3 +100,16 @@ Before production:
 4. Students can create a pending enrollment from a published batch, submit a provider, TrxID and sender phone last two digits, and wait for an admin to approve or reject the payment. Approval is still performed by the existing `admin_verify_payment` RPC and activates the enrollment.
 
 The payment provider account numbers are intentionally left blank in `config.js`; replace them before accepting payments. Never collect payment PINs or OTPs, and verify each transaction in the actual provider account before approving it.
+
+
+## November 2026 repair: course details, exam routes and Excel validation
+
+1. Replace the deployed `app.js` with the `app.js` in this package.
+2. Keep `index.html`, `styles.css`, `config.js`, and the `assets/` directory in the same deployment root.
+3. In Supabase SQL Editor, run `supabase-migration-v4-course-exam-access.sql` after migrations v2 and v3. This enables public reading of published courses/batches and the required authenticated admin/exam access.
+4. In `config.js`, fill in the official AdmiRank bKash, Nagad and Rocket receiving numbers before accepting payments. Do not put any PIN, OTP, service-role key or secret key in the frontend.
+5. Redeploy the complete project to Vercel (not just the `app.js` file if your deployment root differs).
+
+The course details route now resolves by course ID, slug, or legacy title links and displays the routine, exam schedule, batch enrollment and payment entry point. Exam detail routes preserve their destination through login. Excel import accepts `.xlsx` only, validates the workbook headers and every question before creating an exam, and attempts to remove a partially imported exam if a database write fails.
+
+Important: the frontend and SQL migration can be syntax-checked here, but live payment approval and database permissions still require the migration to be applied to your Supabase project and the receiving numbers to be configured.
