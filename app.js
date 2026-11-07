@@ -216,7 +216,7 @@ function wire(){let f=$('#auth-form');if(f)f.onsubmit=async e=>{e.preventDefault
 window.enroll=id=>{if(!id){toast('No published batch is available.',true);return}if(!state.user){go('login');return}go('payment/'+id)};
 window.startExam=startExam;
 window.previewExam=id=>go('admin-exam-preview/'+id);
-sb?.auth.onAuthStateChange(async(_event,session)=>{state.user=session?.user||null;if(state.user)await loadUser();render()});
+sb?.auth.onAuthStateChange(async(_event,session)=>{const nextUser=session?.user||null;const previousUserId=state.user?.id||null;const nextUserId=nextUser?.id||null;state.user=nextUser;if(nextUserId!==previousUserId){if(state.user)await loadUser();else state.roles=[];render()}});
 if(!sb){$('#app').innerHTML='<div class="empty">Supabase client could not load. Check your internet connection.</div>';return}
 (async()=>{try{await loadUser()}catch(e){console.warn(e)}await render()})();
 window.addEventListener('hashchange',render);
