@@ -6,6 +6,12 @@ window.ADMIRANK_CONFIG = {
   SUPABASE_ANON_KEY: "sb_publishable_zW0zHUUih81Paxp4Q8_lEQ_3p2ffrGi",
   BRAND_NAME: "AdmiRank",
   CURRENCY: "৳",
+  // Replace these placeholders with the official AdmiRank payment numbers.
+  PAYMENT_ACCOUNTS: {
+    bKash: "",
+    Nagad: "",
+    Rocket: ""
+  },
   ASSET_PATHS: {
     logo: "./assets/admirank-logo.jpg",
     banner: "./assets/du-a-banner.png",

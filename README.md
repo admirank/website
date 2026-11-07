@@ -72,8 +72,8 @@ Before production:
 - The exam runner is mapped to the supplied RPC response shape. Still test start/resume, saved answers, auto-submit and expiry against the live project.
 - **Storage policy mismatch found in supplied metadata:** `save_exam_answer` expects `student-<auth-user-UUID>/attempt-<attempt-UUID>/<filename>`, while the live Storage INSERT policy expression compares path segments 1 and 2 directly to the bare auth UUID and attempt UUID. These expressions conflict, so answer uploads are likely to be rejected by Storage before the RPC can save the path. Align the policy with the RPC's expected path (or change both consistently) in Supabase before relying on written-script uploads. The frontend uses the RPC-expected `student-.../attempt-...` path and does not weaken security.
 - Confirm evaluator script access. The schema describes private storage access for assigned evaluators; signed/authenticated preview URLs are not yet implemented in this first frontend pass.
-- The leaderboard uses the `public_exam_leaderboard` RPC added by `supabase-migration-v2.sql`; it returns only name, profile image path, rank and marks for exams whose results are explicitly published.
-- Exam question and option snapshots are imported from the Excel file during exam creation. Evaluator assignments can be reviewed in the user section; the actual assignment creation workflow should be completed/tested against live constraints before production.
+- The supplied policies expose students' own results, not a general public leaderboard. The leaderboard page explains this rather than exposing other students' personal results.
+- Question option/image records and exam-question/option snapshots are exposed as admin table-management tabs; the administrator must create the snapshot rows and correct-option flags consistently. Evaluator assignments can be reviewed in the user section; the actual assignment creation workflow should be completed/tested against live constraints before production.
 - The schema metadata includes function definitions, and the exam runner follows the supplied `start_exam` and `load_exam_questions` JSON response keys (`attempt_id`, `expires_at`, `questions`, `saved_answer`).
 
 ## 8. Security checklist
@@ -90,4 +90,13 @@ Before production:
 
 1. **Student enrollment creation is missing:** the listed RLS policies only allow students to select their own enrollment rows; no student INSERT policy or enrollment-creation RPC is listed. The course enrollment screen therefore does not attempt a browser insert. Admin must create a pending enrollment, after which the student can submit payment using the existing secure RPC.
 2. **Answer-script storage path policy conflict:** see the storage note above. Align the Storage INSERT/SELECT policies with the exact `save_exam_answer` RPC path convention before enabling written file uploads.
-3. **Public leaderboard:** apply the migration so the safe `public_exam_leaderboard` RPC is available. Only explicitly published results are returned.
+3. **Public leaderboard:** no policy allows students to read other students' results. The leaderboard is intentionally not populated from private `exam_results`.
+
+## Course enrollment and admin access update (v3)
+
+1. Run `supabase-migration-v3-enrollment.sql` in the Supabase SQL Editor after the earlier v2 migration. It adds the secure `create_course_enrollment(p_batch_id)` RPC and automatically enrolls admin-role users in every existing and future batch.
+2. In `config.js`, set the `PAYMENT_ACCOUNTS` values to the official AdmiRank bKash, Nagad and Rocket receiving numbers. Leave a value blank only while that provider is not being used.
+3. Keep the favicon files in `assets/` with these exact names: `favicon.ico`, `favicon-16x16.png`, and `favicon-32x32.png`. `index.html` references those names.
+4. Students can create a pending enrollment from a published batch, submit a provider, TrxID and sender phone last two digits, and wait for an admin to approve or reject the payment. Approval is still performed by the existing `admin_verify_payment` RPC and activates the enrollment.
+
+The payment provider account numbers are intentionally left blank in `config.js`; replace them before accepting payments. Never collect payment PINs or OTPs, and verify each transaction in the actual provider account before approving it.
