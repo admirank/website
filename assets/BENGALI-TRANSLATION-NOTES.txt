@@ -1,0 +1,17 @@
+AdmiRank Bengali-first interface update
+
+What changed:
+- User-facing interface labels, navigation, buttons, forms, alerts and common messages are translated into natural Bengali directly in app.js.
+- index.html now declares Bengali (lang="bn") and Bengali metadata/title.
+- Noto Sans Bengali is prioritized for readable Bengali UI text.
+- Existing cyan brand accent is set to #00F3FF in the dark theme.
+
+What was intentionally not changed:
+- Supabase table names, columns, RPC/function names, storage paths, route names, IDs and JavaScript logic.
+- Payment provider names (bKash, Nagad, Rocket), standard technical terms (MCQ, PDF, OTP, TrxID), and English digits.
+- User-managed database content such as course titles/descriptions, batch names, exam titles/instructions/questions, announcements and banner copy. These are content records, not interface labels, and should be edited in the admin interface/Supabase if Bengali versions are wanted.
+
+Validation performed:
+- JavaScript syntax checked with Node.js.
+- ZIP archive integrity checked.
+- No live Supabase/Vercel deployment or production-flow testing was performed.
