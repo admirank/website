@@ -1,0 +1,18 @@
+:root{--bg:#f6f7fb;--c:#fff;--t:#1b2233;--m:#667085;--p:#2563eb;--b:#e4e7ec;--ok:#16a34a;--er:#dc2626}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1420;--c:#171e2e;--t:#e8ecf5;--m:#98a2b3;--b:#2a3347}}
+*{box-sizing:border-box}body{margin:0;font:16px system-ui,sans-serif;background:var(--bg);color:var(--t)}
+main{max-width:1100px;margin:auto;padding:16px}a{color:var(--p)}.muted{color:var(--m)}
+#nav{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:10px 16px;background:var(--c);border-bottom:1px solid var(--b)}
+#nav img{height:34px}#nav a{text-decoration:none;font-weight:500}#nav .sp{flex:1}
+.card{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:16px;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.grid img,.hero{width:100%;border-radius:10px;object-fit:cover}.hero{max-height:300px}
+button,.btn{background:var(--p);color:#fff;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;text-decoration:none;display:inline-block;font:inherit}
+button.s{background:var(--m)}button.d{background:var(--er)}button.g{background:var(--ok)}
+input,select,textarea{width:100%;padding:9px;margin:4px 0 10px;border:1px solid var(--b);border-radius:8px;background:var(--bg);color:var(--t);font:inherit}
+label{font-size:14px;color:var(--m)}.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}
+td,th{border-bottom:1px solid var(--b);padding:6px 8px;text-align:left;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+tr.r{cursor:pointer}tr.r:hover{background:var(--bg)}.tabs{display:flex;flex-wrap:wrap;gap:6px}.tabs a{padding:6px 10px;border:1px solid var(--b);border-radius:8px;text-decoration:none;font-size:14px}
+#toast{position:fixed;bottom:16px;right:16px;padding:10px 14px;border-radius:8px;color:#fff;display:none;z-index:9}
+.q{margin:14px 0}.opt{display:block;padding:8px;border:1px solid var(--b);border-radius:8px;margin:6px 0;cursor:pointer}
+.timer{position:sticky;top:0;background:var(--p);color:#fff;padding:8px 14px;border-radius:8px;text-align:right}footer{text-align:center;color:var(--m);padding:20px}
