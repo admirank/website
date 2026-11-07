@@ -7,3 +7,6 @@ AdmiRank banner management update
 - Uploaded images use the existing Supabase Storage bucket: public-assets.
 - Run supabase-migration-v6-banner-management.sql in Supabase SQL Editor after v4 to ensure public read and admin-only upload/delete permissions for banners and public-assets.
 - No new database tables or columns are required; existing banners columns are reused.
+
+
+2026-11-08 fix: homepage renders only banners with is_active explicitly true; inactive/default rows never fall through. Cache-busted app.js/styles.css. Admin banner cards include a permanent delete action for uploaded banners.
