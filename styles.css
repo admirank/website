@@ -33,11 +33,10 @@
 .btn-primary{background:#00cce8;color:#001117;box-shadow:0 7px 18px #00e0fc20}
 .btn-primary:hover{background:#00e0fc}
 .theme-toggle{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:transparent;color:var(--ink);font-weight:700;white-space:nowrap}
-.home-banner-stack{width:100%;margin:0;padding:0;display:flex;flex-direction:column;gap:0;line-height:0}.home-banner{display:block;width:100%;margin:0;padding:0;border:0;line-height:0;font-size:0;background:transparent}.home-banner a{display:block;width:100%;margin:0;padding:0;line-height:0}.home-banner img{display:block;width:100%;height:auto;max-height:none;min-height:0;object-fit:contain;margin:0;padding:0;border:0}.banner-placeholder{min-height:220px;display:grid;place-items:center;color:#00e0fc;font:800 42px Manrope}.home-banner-stack+.section{margin-top:0;padding-top:0}.banner-admin-list{display:grid;gap:14px}.banner-admin-card{display:grid;grid-template-columns:minmax(180px,320px) 1fr;gap:18px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:14px}.banner-admin-preview{width:100%;overflow:hidden;border-radius:9px;background:var(--bg);line-height:0}.banner-admin-preview img{display:block;width:100%;height:auto;max-height:180px;object-fit:contain}.banner-admin-info{display:grid;gap:10px}.banner-admin-info>div:first-child{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.banner-admin-status{font-size:12px;font-weight:700;padding:4px 8px;border-radius:999px}.banner-admin-status.is-visible{background:#dff8ed;color:#087a58}.banner-admin-status.is-hidden{background:#f2e8e8;color:#9b3945}.banner-upload-panel{margin-bottom:18px}@media(max-width:650px){.banner-admin-card{grid-template-columns:1fr}.banner-admin-preview img{max-height:220px}}
+
 .course-extra{margin:30px 0}.course-extra h2{font-size:22px}.rich-text{white-space:normal;line-height:1.85;color:var(--muted)}
 .profile-avatar img,.avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit}.profile-avatar{overflow:hidden}.avatar{overflow:hidden}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}.exam-create-modal{width:min(720px,96vw)}
-:root[data-theme="light"] .home-banner{background:#f4f8fa}
 @media(max-width:600px){.form-grid{grid-template-columns:1fr}.theme-toggle{font-size:11px;padding:8px}}
 
 /* Course detail route layout */
@@ -202,3 +201,41 @@ main.lp .home-banner-stack{margin:0}
 @media(max-width:980px){.lp-spec-grid,.lp-notices{grid-template-columns:repeat(2,1fr)}.lp-about{grid-template-columns:1fr}.lp-foot-grid{grid-template-columns:1fr 1fr}.lp-modal-body{grid-template-columns:1fr}.lp-mini-poster{max-width:200px}}
 @media(max-width:640px){.lp-spec-grid,.lp-notices,.lp-contact-grid{grid-template-columns:1fr}.lp-head{align-items:flex-start}.lp-filters{width:100%}.lp-filter{flex:1;padding:9px 8px}.lp-foot-grid{grid-template-columns:1fr}.lp-modal{padding:0;place-items:end stretch}.lp-modal-panel{max-height:94vh;border-radius:22px 22px 0 0}.lp-modal-head,.lp-modal-body,.lp-modal-foot{padding-left:16px;padding-right:16px}.lp-cta{padding:12px 20px}}
 @media(prefers-reduced-motion:reduce){.lp *,.lp-modal *{animation:none!important;transition:none!important}}
+
+
+/* AdmiRank single cinematic homepage hero */
+.lp-hero{
+  position:relative;isolation:isolate;overflow:hidden;min-height:clamp(430px,47vw,620px);
+  display:flex;align-items:center;background:#020e15 url("./assets/admirank-hero-campus.jpg") center/cover no-repeat;
+  border-bottom:1px solid rgba(0,243,255,.16)
+}
+.lp-hero::before{content:"";position:absolute;inset:0;z-index:-1;background:
+  linear-gradient(90deg,rgba(2,12,18,.98) 0%,rgba(2,12,18,.94) 31%,rgba(2,12,18,.68) 49%,rgba(2,12,18,.04) 78%),
+  linear-gradient(0deg,rgba(2,12,18,.38),transparent 42%)}
+.lp-hero-inner{width:100%;max-width:1280px;margin:0 auto;padding:70px clamp(20px,5vw,64px) 82px}
+.lp-hero-copy{max-width:760px}
+.lp-hero-kicker{display:inline-flex;align-items:center;gap:10px;margin-bottom:22px;color:#00F3FF;font:800 11px Manrope,sans-serif;letter-spacing:.2em}
+.lp-hero-kicker span{display:block;width:28px;height:2px;background:#00F3FF;box-shadow:0 0 12px #00F3FF}
+.lp-hero h1{max-width:760px;margin:0;color:#fff;font:800 clamp(32px,4.2vw,57px)/1.38 'Noto Sans Bengali',sans-serif;letter-spacing:-.035em;text-wrap:balance;text-shadow:0 3px 22px rgba(0,0,0,.24)}
+.lp-hero h1 em{display:inline;color:#00F3FF;font-style:normal}
+.lp-hero-cta{display:inline-flex;align-items:center;justify-content:center;gap:18px;margin-top:34px;min-height:58px;padding:0 28px;border-radius:999px;background:#00F3FF;color:#001317;font:800 17px 'Noto Sans Bengali',sans-serif;box-shadow:0 12px 34px rgba(0,243,255,.2);transition:transform .2s,box-shadow .2s,background .2s}
+.lp-hero-cta span{font:700 24px/1 Manrope,sans-serif;transition:transform .2s}
+.lp-hero-cta:hover{transform:translateY(-3px);background:#35f7ff;box-shadow:0 16px 38px rgba(0,243,255,.3)}
+.lp-hero-cta:hover span{transform:translateX(4px)}
+.lp-hero-bottom{position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,#00F3FF 58%,transparent);opacity:.55}
+#lp-courses{scroll-margin-top:22px}
+@media(max-width:900px){
+ .lp-hero{min-height:490px;background-position:58% center}
+ .lp-hero::before{background:linear-gradient(90deg,rgba(2,12,18,.97) 0%,rgba(2,12,18,.87) 48%,rgba(2,12,18,.36) 100%),linear-gradient(0deg,rgba(2,12,18,.3),transparent 55%)}
+ .lp-hero-inner{padding-top:62px;padding-bottom:76px}
+ .lp-hero-copy{max-width:680px}
+ .lp-hero h1{font-size:clamp(30px,5.5vw,46px)}
+}
+@media(max-width:600px){
+ .lp-hero{min-height:520px;align-items:flex-start;background-position:62% center}
+ .lp-hero::before{background:linear-gradient(90deg,rgba(2,12,18,.97),rgba(2,12,18,.83) 68%,rgba(2,12,18,.55)),linear-gradient(0deg,rgba(2,12,18,.55),transparent 70%)}
+ .lp-hero-inner{padding:68px 22px 82px}
+ .lp-hero-kicker{font-size:10px;margin-bottom:18px}
+ .lp-hero h1{font-size:clamp(29px,8.2vw,39px);line-height:1.48;max-width:540px}
+ .lp-hero-cta{min-height:54px;margin-top:28px;padding:0 23px;font-size:16px}
+}

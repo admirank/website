@@ -1,12 +1,8 @@
-AdmiRank banner management update
+AdmiRank homepage hero update
 
-- Admin > Website content > Banners now has a dedicated banner manager.
-- Admins can upload PNG/JPG/WebP banners, hide/show them, and permanently delete uploaded banners.
-- Existing project assets assets/du-a-banner.png and assets/du-b-banner.png are displayed by default and can be hidden/shown from the admin manager.
-- Homepage banners are sorted by display_order and stacked with no gaps. Images keep their natural aspect ratio.
-- Uploaded images use the existing Supabase Storage bucket: public-assets.
-- Run supabase-migration-v6-banner-management.sql in Supabase SQL Editor after v4 to ensure public read and admin-only upload/delete permissions for banners and public-assets.
-- No new database tables or columns are required; existing banners columns are reused.
-
-
-2026-11-08 fix: homepage renders only banners with is_active explicitly true; inactive/default rows never fall through. Cache-busted app.js/styles.css. Admin banner cards include a permanent delete action for uploaded banners.
+- Replaced the previous two-banner homepage stack with one responsive cinematic hero.
+- Hero artwork: assets/admirank-hero-campus.jpg.
+- Hero heading: ঢাবিয়ান-দের দ্বারা প্রণীত প্রশ্নে ভর্তি পরীক্ষার অনুরূপ মডেল টেস্টে নিজের র‌্যাঙ্ক যাচাই.
+- The “কোর্সসমূহ দেখুন” button smoothly scrolls to #lp-courses (আমাদের কোর্সসমূহ).
+- Removed the banner upload, visibility, and delete controls from the admin website-content area.
+- Existing Supabase banners rows and storage files are not deleted; they are simply ignored by this homepage version.

@@ -42,15 +42,11 @@ The app uses the existing tables and RPC functions from the supplied metadata:
 
 All authorization remains dependent on Supabase Auth, RLS and backend function checks. Frontend route checks are only navigation/UI, not a security boundary.
 
-## 4. Add your image assets
+## 4. Homepage hero assets
 
-The supplied AdmiRank logo has been copied into `assets/admirank-logo.jpg`. Add these files to `assets/` before deployment:
+The homepage now uses one fixed, responsive cinematic hero instead of the previous two stacked banners. Its campus artwork is stored at `assets/admirank-hero-campus.jpg`; the headline and the “কোর্সসমূহ দেখুন” button are live HTML, and the button smoothly scrolls to `আমাদের কোর্সসমূহ`.
 
-- `du-a-banner.png` — your supplied landing-page banner; it is displayed edge-to-edge across the full page width.
-- `favicon.png` — browser tab icon.
-- `du-a-course-poster.png` — optional course-card fallback image.
-
-If a file is missing, the interface uses a fallback. Replace these images later without changing application code.
+The previous admin banner-upload/management interface has been disabled. Existing rows in the Supabase `banners` table are left untouched but are no longer rendered on the homepage. The supplied AdmiRank logo and course-poster fallback remain in `assets/`.
 
 ## 5. Important configuration items to complete
 
