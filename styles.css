@@ -43,3 +43,162 @@
 /* Course detail route layout */
 .course-detail-page{max-width:1320px;margin:0 auto}.course-detail-grid{grid-template-columns:minmax(0,1.4fr) minmax(280px,.8fr)!important}.course-detail-summary{position:sticky;top:96px}.course-detail-summary .course-cover{height:220px}.course-detail-page .course-extra{padding:22px;background:var(--white);border:1px solid var(--line);border-radius:16px}.course-detail-page .course-extra h2{margin-top:0}.course-detail-page .table-wrap{margin-top:12px}
 @media(max-width:720px){.course-detail-grid{grid-template-columns:1fr!important}.course-detail-summary{position:static;grid-row:1}.course-detail-summary .course-cover{height:170px}.course-detail-page h1{font-size:30px!important}}
+
+/* ===================== AdmiRank landing page (lp-*) ===================== */
+:root[data-theme="dark"]{--lp-card:#0e1822;--lp-card2:#111e2a;--lp-alt:#0a1118;--lp-accent:#00F3FF;--lp-accent-soft:rgba(0,243,255,.09);--lp-border:#1f3140;--lp-on:#001317;--lp-glass:rgba(8,13,19,.78);--lp-shadow:0 24px 60px -24px rgba(0,0,0,.7)}
+:root[data-theme="light"]{--lp-card:#fff;--lp-card2:#f5f9fb;--lp-alt:#eaf2f6;--lp-accent:#0a8ea8;--lp-accent-soft:rgba(10,142,168,.09);--lp-border:#d7e3ea;--lp-on:#fff;--lp-glass:rgba(244,248,250,.82);--lp-shadow:0 24px 50px -26px rgba(16,40,60,.28)}
+.lp,.lp-notchbar,.lp-footer,.lp-modal{font-family:'Noto Sans Bengali','DM Sans',sans-serif}
+.lp h1,.lp h2,.lp h3,.lp h4,.lp-modal h2,.lp-modal h4,.lp-footer h5{font-family:Manrope,'Noto Sans Bengali',sans-serif;letter-spacing:-.02em;margin:0}
+.lp-wrap{max-width:1220px;margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+
+/* Notch */
+.lp-notchbar{position:sticky;top:0;z-index:60;display:flex;justify-content:center;padding:7px 12px;background:var(--lp-glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.lp-notch{display:flex;align-items:center;gap:8px;padding:4px 5px 4px 12px;border:1px solid var(--lp-border);border-radius:999px;background:var(--lp-card);box-shadow:0 8px 24px -14px rgba(0,0,0,.5)}
+.lp-brand{display:flex;align-items:center;gap:7px;color:var(--ink)}
+.lp-brand img{width:24px;height:24px;border-radius:7px;object-fit:cover;display:block}
+.lp-brand b{font:800 14px Manrope,sans-serif;letter-spacing:-.02em;color:var(--ink)}
+.lp-sep{width:1px;height:16px;background:var(--lp-border);margin:0 2px}
+.lp-icon-btn{position:relative;display:inline-grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--lp-border);border-radius:50%;background:transparent;color:var(--ink);font-size:0;transition:.2s}
+.lp-icon-btn:hover{border-color:var(--lp-accent);color:var(--lp-accent)}
+.lp-icon-btn svg{width:16px;height:16px}
+.lp-icon-btn[data-theme-toggle]::before{content:"";width:15px;height:15px;background:currentColor;-webkit-mask:var(--lp-ico) center/contain no-repeat;mask:var(--lp-ico) center/contain no-repeat}
+:root[data-theme="dark"] .lp-icon-btn[data-theme-toggle]{--lp-ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41'/%3E%3C/svg%3E")}
+:root[data-theme="light"] .lp-icon-btn[data-theme-toggle]{--lp-ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z'/%3E%3C/svg%3E")}
+.lp-login{display:inline-flex;align-items:center;height:30px;padding:0 14px;border-radius:999px;background:var(--lp-accent);color:var(--lp-on);font:700 12px 'Noto Sans Bengali',sans-serif;transition:.2s}
+.lp-login:hover{filter:brightness(1.08);transform:translateY(-1px)}
+
+/* Banners: untouched stack, zero gap */
+main.lp .home-banner-stack{margin:0}
+
+/* Sections */
+.lp-section{padding:clamp(54px,8vw,96px) 0}
+.lp-alt{background:var(--lp-alt);border-block:1px solid var(--lp-border)}
+.lp-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:34px}
+.lp-head.center{flex-direction:column;align-items:center;text-align:center}
+.lp-eyebrow{display:inline-block;margin-bottom:10px;font:800 11px Manrope,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--lp-accent)}
+.lp h2{font-size:clamp(26px,3.4vw,38px);line-height:1.2;font-weight:800;color:var(--ink)}
+.lp-head p{margin:10px 0 0;max-width:560px;color:var(--muted);font-size:15px;line-height:1.75}
+.lp-ghost{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border:1px solid var(--lp-border);border-radius:12px;font-weight:700;color:var(--ink)}
+.lp-ghost svg,.lp-more svg,.lp-cta svg{width:16px;height:16px}
+.lp-ghost:hover{border-color:var(--lp-accent);color:var(--lp-accent)}
+.lp-stats{border-bottom:1px solid var(--lp-border);background:var(--lp-card)}
+.lp-stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;padding:26px 0;text-align:center}
+.lp-stat-row b{display:block;font:800 28px Manrope,sans-serif;color:var(--lp-accent)}
+.lp-stat-row span{color:var(--muted);font-size:13px}
+
+/* Filters */
+.lp-filters{display:flex;gap:8px;flex-wrap:wrap;padding:5px;border:1px solid var(--lp-border);border-radius:14px;background:var(--lp-card)}
+.lp-filter{border:0;border-radius:10px;padding:9px 18px;background:transparent;color:var(--muted);font:700 13px Manrope,'Noto Sans Bengali',sans-serif;transition:.2s}
+.lp-filter:hover{color:var(--ink)}
+.lp-filter.active{background:var(--lp-accent);color:var(--lp-on);box-shadow:0 6px 18px -8px var(--lp-accent)}
+
+/* Course cards */
+.lp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:24px}
+.lp-card{display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--lp-border);border-radius:22px;background:var(--lp-card);cursor:pointer;transition:transform .3s,border-color .3s,box-shadow .3s}
+.lp-card[hidden]{display:none}
+.lp-card:hover{transform:translateY(-6px);border-color:var(--lp-accent);box-shadow:var(--lp-shadow),0 0 0 1px var(--lp-accent-soft)}
+.lp-poster{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--lp-card2)}
+.lp-poster img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s}
+.lp-card:hover .lp-poster img{transform:scale(1.04)}
+.lp-poster.failed::after{content:"AdmiRank";position:absolute;inset:0;display:grid;place-items:center;font:800 22px Manrope,sans-serif;color:var(--muted)}
+.lp-chip{position:absolute;top:12px;left:12px;padding:5px 11px;border-radius:999px;background:rgba(5,8,13,.78);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#00F3FF;font:800 11px Manrope,sans-serif;letter-spacing:.06em;border:1px solid rgba(0,243,255,.35)}
+.lp-chip.solid{position:static;display:inline-block;margin-bottom:8px;background:var(--lp-accent-soft);color:var(--lp-accent);border-color:transparent}
+.lp-card-body{display:flex;flex-direction:column;gap:10px;padding:18px 20px 20px;flex:1}
+.lp-card-body h3{font-size:18px;line-height:1.35;font-weight:800;color:var(--ink)}
+.lp-card-body p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lp-card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:14px;border-top:1px dashed var(--lp-border)}
+.lp-price{display:flex;align-items:baseline;gap:8px}
+.lp-price-now{font:800 20px Manrope,sans-serif;color:var(--lp-accent)}
+.lp-price del{color:var(--muted);font-size:13px}
+.lp-price.big .lp-price-now{font-size:26px}
+.lp-more{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border:1px solid var(--lp-border);border-radius:11px;background:transparent;color:var(--ink);font:700 13px 'Noto Sans Bengali',sans-serif;transition:.2s}
+.lp-card:hover .lp-more,.lp-more:hover{background:var(--lp-accent);border-color:var(--lp-accent);color:var(--lp-on)}
+.lp-empty{grid-column:1/-1;padding:44px 20px;text-align:center;border:1px dashed var(--lp-border);border-radius:18px;color:var(--muted);margin-top:8px}
+.lp-empty[hidden]{display:none}
+.lp-empty b{color:var(--lp-accent)}
+
+/* Specialties */
+.lp-spec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.lp-spec{padding:26px;border:1px solid var(--lp-border);border-radius:20px;background:var(--lp-card);transition:.3s}
+.lp-spec:hover{transform:translateY(-4px);border-color:var(--lp-accent)}
+.lp-spec-ico{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:var(--lp-accent-soft);color:var(--lp-accent);margin-bottom:16px}
+.lp-spec-ico.wa{background:rgba(37,211,102,.12);color:#25d366}
+.lp-spec h3{font-size:17px;font-weight:800;margin-bottom:8px;color:var(--ink)}
+.lp-spec p{margin:0;color:var(--muted);font-size:14px;line-height:1.75}
+
+/* Notices */
+.lp-notices{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.lp-notices .notice-card{margin:0;border-radius:18px}
+
+/* About + FAQ */
+.lp-about{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,72px);align-items:start}
+.lp-about-p{margin:14px 0 20px;color:var(--muted);font-size:15.5px;line-height:1.9}
+.lp-ticks{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.lp-ticks li{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--ink)}
+.lp-ticks svg{width:20px;height:20px;padding:3px;border-radius:50%;background:var(--lp-accent-soft);color:var(--lp-accent);flex:none}
+.lp-faq details{border:1px solid var(--lp-border);border-radius:14px;background:var(--lp-card);margin-top:12px;overflow:hidden;transition:border-color .2s}
+.lp-faq details[open]{border-color:var(--lp-accent)}
+.lp-faq summary{cursor:pointer;padding:16px 18px;font-weight:700;color:var(--ink);list-style:none;display:flex;justify-content:space-between;gap:12px}
+.lp-faq summary::-webkit-details-marker{display:none}
+.lp-faq summary::after{content:"+";color:var(--lp-accent);font:600 20px/1 Manrope,sans-serif}
+.lp-faq details[open] summary::after{content:"–"}
+.lp-faq p{margin:0;padding:0 18px 18px;color:var(--muted);line-height:1.8;font-size:14px}
+
+/* Contact */
+.lp-contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:860px;margin:0 auto}
+.lp-contact-card{display:flex;align-items:center;gap:16px;padding:22px 24px;border:1px solid var(--lp-border);border-radius:20px;background:var(--lp-card);transition:.3s;color:var(--ink)}
+.lp-contact-card:hover{transform:translateY(-4px);border-color:var(--lp-accent)}
+.lp-contact-card .lp-spec-ico{margin:0;flex:none}
+.lp-contact-card div:nth-child(2){flex:1;min-width:0}
+.lp-contact-card small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.lp-contact-card b{font:700 16px Manrope,sans-serif;overflow-wrap:anywhere}
+.lp-contact-card>svg{width:20px;height:20px;color:var(--lp-accent);flex:none}
+
+/* Footer */
+.lp-footer{background:#04070b;color:#aab9c5;padding:56px 0 26px}
+:root[data-theme="light"] .lp-footer{background:#0b141c}
+.lp-foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.3fr;gap:32px}
+.lp-footer .lp-brand,.lp-footer .lp-brand b{color:#fff}
+.lp-foot-brand p{margin:12px 0 0;color:#7f909d}
+.lp-footer h5{color:#fff;font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+.lp-footer a:not(.lp-brand){display:block;padding:5px 0;color:#aab9c5;font-size:14px;overflow-wrap:anywhere;transition:.2s}
+.lp-footer a:not(.lp-brand):hover{color:#00F3FF}
+.lp-copy{margin-top:40px;padding-top:20px;border-top:1px solid #16222c;color:#6d7e8b;font-size:13px;text-align:center}
+
+/* Details modal */
+.lp-lock{overflow:hidden}
+.lp-modal{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:16px}
+.lp-modal-backdrop{position:absolute;inset:0;background:rgba(2,6,10,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:lpFade .25s}
+.lp-modal-panel{position:relative;display:flex;flex-direction:column;width:min(1080px,100%);max-height:calc(100vh - 32px);border:1px solid var(--lp-border);border-radius:24px;background:var(--lp-card);color:var(--ink);box-shadow:0 40px 100px -30px #000;overflow:hidden;animation:lpPop .3s cubic-bezier(.2,.8,.2,1)}
+@keyframes lpFade{from{opacity:0}}@keyframes lpPop{from{opacity:0;transform:translateY(18px) scale(.98)}}
+.lp-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 24px;border-bottom:1px solid var(--lp-border)}
+.lp-modal-head h2{font-size:clamp(20px,2.6vw,26px);font-weight:800;line-height:1.25}
+.lp-modal-body{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.85fr);gap:24px;padding:22px 24px;overflow-y:auto;flex:1}
+.lp-modal-routine h4,.lp-batches h4{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;margin-bottom:12px;color:var(--lp-accent)}
+.lp-modal-routine h4 svg{width:18px;height:18px}
+.lp-routine-box{margin:0;border:1px solid var(--lp-border);border-radius:16px;overflow:hidden;background:var(--lp-card2)}
+.lp-routine-box img{display:block;width:100%;height:auto}
+.lp-routine-box img.lp-img-failed{display:none}
+.lp-routine-empty{display:none;padding:34px 18px;text-align:center;color:var(--muted)}
+.lp-routine-box.failed .lp-routine-empty{display:block}
+.lp-routine-box:not(.failed) .lp-routine-empty:empty{display:none}
+.lp-modal-info{display:flex;flex-direction:column;gap:16px}
+.lp-mini-poster{aspect-ratio:1/1;max-width:260px;border-radius:16px;overflow:hidden;border:1px solid var(--lp-border);background:var(--lp-card2)}
+.lp-mini-poster img{width:100%;height:100%;object-fit:cover;display:block}
+.lp-lead{margin:0;font-weight:600;line-height:1.7}
+.lp-richtext{color:var(--muted);line-height:1.85;font-size:14px;margin-top:12px}
+.lp-modal-info .lp-richtext{margin-top:0}
+.lp-batches{display:grid;gap:8px}
+.lp-batch{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--lp-border);border-radius:12px;background:var(--lp-card2);cursor:pointer;font-size:14px}
+.lp-batch.single{cursor:default}
+.lp-batch small{display:block;color:var(--muted);margin-top:2px;font-size:12px}
+.lp-batch input{accent-color:var(--lp-accent);margin-top:3px}
+.lp-batch:has(input:checked){border-color:var(--lp-accent);background:var(--lp-accent-soft)}
+.lp-modal-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-top:1px solid var(--lp-border);background:var(--lp-card2)}
+.lp-cta{display:inline-flex;align-items:center;gap:10px;padding:13px 28px;border:0;border-radius:13px;background:var(--lp-accent);color:var(--lp-on);font:800 15px Manrope,'Noto Sans Bengali',sans-serif;box-shadow:0 12px 28px -12px var(--lp-accent);transition:.2s}
+.lp-cta:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.07)}
+.lp-cta:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+
+@media(max-width:980px){.lp-spec-grid,.lp-notices{grid-template-columns:repeat(2,1fr)}.lp-about{grid-template-columns:1fr}.lp-foot-grid{grid-template-columns:1fr 1fr}.lp-modal-body{grid-template-columns:1fr}.lp-mini-poster{max-width:200px}}
+@media(max-width:640px){.lp-spec-grid,.lp-notices,.lp-contact-grid{grid-template-columns:1fr}.lp-head{align-items:flex-start}.lp-filters{width:100%}.lp-filter{flex:1;padding:9px 8px}.lp-foot-grid{grid-template-columns:1fr}.lp-modal{padding:0;place-items:end stretch}.lp-modal-panel{max-height:94vh;border-radius:22px 22px 0 0}.lp-modal-head,.lp-modal-body,.lp-modal-foot{padding-left:16px;padding-right:16px}.lp-cta{padding:12px 20px}}
+@media(prefers-reduced-motion:reduce){.lp *,.lp-modal *{animation:none!important;transition:none!important}}

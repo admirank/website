@@ -12,6 +12,17 @@ window.ADMIRANK_CONFIG = {
     Nagad: "",
     Rocket: ""
   },
+  // Landing page content. Leave a value empty to use the built-in default / hide the block.
+  LANDING: {
+    about: "",   // ENTER YOUR ABOUT-US PARAGRAPH HERE (Bengali or English)
+    facebook: "https://facebook.com/AdmiRank",
+    stats: [     // ENTER YOUR NUMBERS HERE, e.g. { value: "1,200+", label: "Students" } (hidden until filled)
+      // { value: "", label: "" },
+    ],
+    faqs: [      // ENTER EXTRA FAQ HERE, e.g. { q: "Question?", a: "Answer." }
+      // { q: "", a: "" },
+    ]
+  },
   ASSET_PATHS: {
     logo: "./assets/admirank-logo.jpg",
     banner: "./assets/du-a-banner.png",
