@@ -109,3 +109,14 @@ The payment provider account numbers are intentionally left blank in `config.js`
 The course details route now resolves by course ID, slug, or legacy title links and displays the routine, exam schedule, batch enrollment and payment entry point. Exam detail routes preserve their destination through login. Excel import accepts `.xlsx` only, validates the workbook headers and every question before creating an exam, and attempts to remove a partially imported exam if a database write fails.
 
 Important: the frontend and SQL migration can be syntax-checked here, but live payment approval and database permissions still require the migration to be applied to your Supabase project and the receiving numbers to be configured.
+
+
+## 9. Question bank (v9)
+
+Run `supabase-migration-v9-question-bank.sql` once in the Supabase SQL Editor (after v8).
+
+- **Admin → Question bank** is now where all questions are uploaded. Courses and subjects are fixed: **DU A** (Physics, Chemistry, Math, Biology, Bangla, English) and **DU B** (Bangla, English, General Knowledge).
+- Two question types, kept separate: **MCQ** (4 options + correct option) and **Written** (model answer). Every question must also have a **short solution**.
+- Add one question at a time (“Save & add another” speeds this up) or use **Bulk upload (Excel)** with `AdmiRank-Question-Template.xlsx` (`subject` column is optional if you choose a default subject).
+- Each question shows **Used in** tags with the (shortened) name of every exam it was added to; filter by used / not used.
+- **Exams are built from the bank:** tick questions (selection stays while you change filters) → “Make exam from selected”. Questions are copied into the exam as snapshots, so editing or deleting a bank question never changes an existing exam. The old “upload Excel inside Create exam” form was removed.
