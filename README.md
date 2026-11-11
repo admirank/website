@@ -130,3 +130,13 @@ Run `supabase-migration-v10-question-source.sql` once in the Supabase SQL Editor
 - The **Add question** form and **Bulk upload** both have a **Source** dropdown (or “＋ Add new source…”). The last source you used is pre-selected, so a long run of uploads keeps the same source.
 - Bulk Excel files may also include an optional `source` column; it must match an existing source name and overrides the dropdown for that row. If a name does not exist, nothing is uploaded and the error says which row.
 - The bank table shows each question's source and can be filtered by source (or by “No source”).
+
+## 11. Maths in questions + MCQ submit fix (v11)
+
+- Run `supabase-migration-v11-mcq-lock-log-fix.sql` once in the Supabase SQL Editor. It fixes the error `new row for relation "exam_activity_logs" violates check constraint "exam_activity_logs_event_type_check"` that appeared when a student submitted the MCQ part of a two-part exam (the database logs an `mcq_locked` event that the table did not allow).
+- Maths is shown with KaTeX. In a question, option, answer or solution, write LaTeX between dollar signs and it appears as real stacked fractions, powers and roots everywhere (question bank, exam page, results):
+  - `$\frac{3}{4}$` → ¾ as a stacked fraction (`$\dfrac{a}{b}$` for a larger one)
+  - `$x^{2}$`, `$x_{1}$`, `$\sqrt{x}$`, `$\sqrt[3]{x}$`, `$\pm$`, `$\times$`, `$\int_0^1 x\,dx$`
+  - `$$ ... $$` (or `\[ ... \]`) puts a formula on its own centred line; `\( ... \)` is the same as single `$ ... $`.
+- Works for the Excel bulk upload too: just put the LaTeX text in the cell. The “Add question” form shows a live **Maths preview** when the text contains a formula. Questions already in the bank stay as they were typed until they are edited or re-uploaded.
+

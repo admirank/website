@@ -311,3 +311,5 @@ main.lp .home-banner-stack{margin:0}
 [data-theme=dark] .qb-tags .tag{background:#0d3321;color:#5be39a}
 @media(max-width:600px){.qb-filters select{max-width:none;flex:1 1 140px}.qb-bar{flex-wrap:wrap;justify-content:space-between}}
 .qb-source{min-width:120px;max-width:190px;font-size:12.5px;line-height:1.35}
+.qb-preview{border:1px dashed #c9d3e3;border-radius:10px;padding:10px 14px;line-height:1.9}.qb-preview div+div{margin-top:4px}[data-theme=dark] .qb-preview{border-color:#34485a}.qb-preview-box[hidden]{display:none}
+.katex{font-size:1.12em}.katex-display{margin:.6em 0;overflow-x:auto;overflow-y:hidden}
