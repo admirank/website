@@ -140,3 +140,12 @@ Run `supabase-migration-v10-question-source.sql` once in the Supabase SQL Editor
   - `$$ ... $$` (or `\[ ... \]`) puts a formula on its own centred line; `\( ... \)` is the same as single `$ ... $`.
 - Works for the Excel bulk upload too: just put the LaTeX text in the cell. The “Add question” form shows a live **Maths preview** when the text contains a formula. Questions already in the bank stay as they were typed until they are edited or re-uploaded.
 
+## 12. Exam opening / expiry time (v12)
+
+Run `supabase-migration-v12-exam-schedule.sql` once in the Supabase SQL Editor.
+
+- **Make exam from selected** now has **Exam opens** (default: now) and **Exam expires (optional)**.
+- Leave “expires” empty and the exam stays an always-open practice exam, exactly as before (shown as “No expiry”).
+- Set an expiry (or a future opening time) and students cannot *start* the exam before it opens or after it expires; the Examinations page shows the schedule and a disabled “সময় শেষ” / “এখনও শুরু হয়নি” button. A student who already started can finish and resume within their own time limit.
+- Exams created before this update are not affected.
+
