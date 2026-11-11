@@ -310,3 +310,4 @@ main.lp .home-banner-stack{margin:0}
 [data-theme=dark] .qb-bar,[data-theme=dark] .qb-filters select{background:#101a24;border-color:#23313d;color:var(--ink)}
 [data-theme=dark] .qb-tags .tag{background:#0d3321;color:#5be39a}
 @media(max-width:600px){.qb-filters select{max-width:none;flex:1 1 140px}.qb-bar{flex-wrap:wrap;justify-content:space-between}}
+.qb-source{min-width:120px;max-width:190px;font-size:12.5px;line-height:1.35}

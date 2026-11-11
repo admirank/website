@@ -120,3 +120,13 @@ Run `supabase-migration-v9-question-bank.sql` once in the Supabase SQL Editor (a
 - Add one question at a time (“Save & add another” speeds this up) or use **Bulk upload (Excel)** with `AdmiRank-Question-Template.xlsx` (`subject` column is optional if you choose a default subject).
 - Each question shows **Used in** tags with the (shortened) name of every exam it was added to; filter by used / not used.
 - **Exams are built from the bank:** tick questions (selection stays while you change filters) → “Make exam from selected”. Questions are copied into the exam as snapshots, so editing or deleting a bank question never changes an existing exam. The old “upload Excel inside Create exam” form was removed.
+
+## 10. Question source (v10)
+
+Run `supabase-migration-v10-question-source.sql` once in the Supabase SQL Editor (after v9).
+
+- Every bank question can have a **source** (a plain text name such as `Udvash DU A QB Model Test - 01`). The migration creates that first source and sets it on **all questions already in the bank**.
+- **Admin → Question bank → Manage sources** adds, renames and deletes sources (a source that still has questions cannot be deleted).
+- The **Add question** form and **Bulk upload** both have a **Source** dropdown (or “＋ Add new source…”). The last source you used is pre-selected, so a long run of uploads keeps the same source.
+- Bulk Excel files may also include an optional `source` column; it must match an existing source name and overrides the dropdown for that row. If a name does not exist, nothing is uploaded and the error says which row.
+- The bank table shows each question's source and can be filtered by source (or by “No source”).
