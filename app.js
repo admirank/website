@@ -206,9 +206,42 @@ async function adminExamPreview(id){
   const questions=await result(sb.from('exam_questions').select('*').eq('exam_id',id).order('question_order'));
   const qids=questions.map(q=>q.id);
   const options=qids.length?await result(sb.from('exam_question_options').select('*').in('exam_question_id',qids).order('display_order')):[];
-  const body=questions.length?questions.map((q,i)=>{const opts=options.filter(o=>o.exam_question_id===q.id);return `<article class="notice-card"><div class="tag">QUESTION ${i+1} · ${esc(q.question_type||'')}${q.subject_name_snapshot&&subjRules(exam)?`<span class="tag" style="margin-left:8px">${esc(q.subject_name_snapshot)}</span>`:''}</div><h3>${esc(q.question_text_snapshot||'')}</h3><p class="muted">Marks: ${esc(q.marks??'—')} · Negative: ${esc(q.negative_marks??0)}</p>${opts.length?`<ol>${opts.map(o=>`<li style="margin:8px 0;${o.is_correct?'font-weight:800;color:var(--success,#16834a)':''}">${esc(o.option_label||'')}. ${esc(o.option_text||'')}${o.is_correct?' ✓ Correct answer':''}</li>`).join('')}</ol>`:''}${q.correct_answer_text_snapshot?`<p><strong>Answer:</strong> ${esc(q.correct_answer_text_snapshot)}</p>`:''}${q.explanation_snapshot?`<p><strong>Explanation:</strong> ${esc(q.explanation_snapshot)}</p>`:''}</article>`}).join(''):'<div class="empty">No questions have been added to this exam yet.</div>';
+  window.__previewQs={examId:id,questions,options};
+  const body=questions.length?questions.map((q,i)=>{const opts=options.filter(o=>o.exam_question_id===q.id);return `<article class="notice-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div class="tag">QUESTION ${i+1} · ${esc(q.question_type||'')}${q.subject_name_snapshot&&subjRules(exam)?`<span class="tag" style="margin-left:8px">${esc(q.subject_name_snapshot)}</span>`:''}</div><button class="btn btn-outline" style="padding:6px 14px" onclick="window.editExamQuestion('${q.id}')">✎ Edit</button></div><h3>${esc(q.question_text_snapshot||'')}</h3><p class="muted">Marks: ${esc(q.marks??'—')} · Negative: ${esc(q.negative_marks??0)}</p>${opts.length?`<ol>${opts.map(o=>`<li style="margin:8px 0;${o.is_correct?'font-weight:800;color:var(--success,#16834a)':''}">${esc(o.option_label||'')}. ${esc(o.option_text||'')}${o.is_correct?' ✓ Correct answer':''}</li>`).join('')}</ol>`:''}${q.correct_answer_text_snapshot?`<p><strong>Answer:</strong> ${esc(q.correct_answer_text_snapshot)}</p>`:''}${q.explanation_snapshot?`<p><strong>Explanation:</strong> ${esc(q.explanation_snapshot)}</p>`:''}</article>`}).join(''):'<div class="empty">No questions have been added to this exam yet.</div>';
   $('#app').innerHTML=shell(`<div class="page-title"><div><a href="#exam-info/${id}" class="muted">← Back to exam</a><h1>${esc(exam.title)} — Question preview</h1><p>Admin-only preview. Schedule restrictions do not apply; no student attempt is started.</p></div></div><section class="panel"><div class="panel-head"><h3>${questions.length} questions · ${esc(exam.total_marks??'—')} total marks</h3></div>${subjRuleInfoHTML(exam)}${body}</section>`,'my-exams');translateUI();
 }
+window.editExamQuestion=function(qid){
+  const d=window.__previewQs||{};const q=(d.questions||[]).find(x=>x.id===qid);if(!q)return;
+  const opts=(d.options||[]).filter(o=>o.exam_question_id===qid).sort((a,b)=>(a.display_order??0)-(b.display_order??0));
+  const isMcq=q.question_type==='mcq'&&opts.length;
+  $('#eq-modal')?.remove();
+  document.body.insertAdjacentHTML('beforeend',`<div class="modal-backdrop" id="eq-modal"><div class="modal" role="dialog" aria-modal="true" style="width:min(720px,100%)"><h2>Edit question</h2><p class="muted" style="font-size:13px">Changes apply to this exam only. Already-submitted attempts are not re-graded.</p>
+<div class="field"><label>Question</label><textarea id="eq-text" rows="4">${esc(q.question_text_snapshot||'')}</textarea></div>
+${isMcq?`<div class="field"><label>Options — select the correct answer</label>${opts.map(o=>`<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="radio" name="eq-correct" value="${o.id}" ${o.is_correct?'checked':''} style="width:auto"><strong>${esc(o.option_label||'')}.</strong><input type="text" data-opt="${o.id}" value="${esc(o.option_text||'')}" style="flex:1"></div>`).join('')}</div>`:''}
+<div class="field"><label>${isMcq?'Correct answer text (optional)':'Model answer'}</label><textarea id="eq-ans" rows="3">${esc(q.correct_answer_text_snapshot||'')}</textarea></div>
+<div class="field"><label>Solution / explanation</label><textarea id="eq-exp" rows="5">${esc(q.explanation_snapshot||'')}</textarea></div>
+<div class="modal-actions"><button class="btn btn-outline" id="eq-cancel">Cancel</button><button class="btn btn-primary" id="eq-save">Save changes</button></div></div></div>`);
+  const close=()=>$('#eq-modal')?.remove();
+  $('#eq-cancel').onclick=close;
+  $('#eq-modal').addEventListener('mousedown',e=>{if(e.target.id==='eq-modal')close()});
+  $('#eq-save').onclick=async()=>{
+    const btn=$('#eq-save');btn.disabled=true;
+    try{
+      const text=$('#eq-text').value.trim();if(!text)throw Error('Question text cannot be empty.');
+      const ans=$('#eq-ans').value.trim(),exp=$('#eq-exp').value.trim();
+      await result(sb.from('exam_questions').update({question_text_snapshot:text,correct_answer_text_snapshot:ans||null,explanation_snapshot:exp||null}).eq('id',qid));
+      if(isMcq){
+        const picked=$('input[name="eq-correct"]:checked')?.value;if(!picked)throw Error('Select the correct option.');
+        for(const o of opts){
+          const t=$(`input[data-opt="${o.id}"]`).value.trim();if(!t)throw Error('Option '+(o.option_label||'')+' cannot be empty.');
+          if(t!==(o.option_text||'')||(o.id===picked)!==!!o.is_correct)
+            await result(sb.from('exam_question_options').update({option_text:t,is_correct:o.id===picked}).eq('id',o.id));
+        }
+      }
+      close();toast('Question updated.');await adminExamPreview(d.examId);
+    }catch(err){btn.disabled=false;toast(err.message||'Could not save changes.',true)}
+  };
+};
 async function startExam(id){try{
   let ex=await result(sb.from('exams').select('*').eq('id',id).maybeSingle()).catch(()=>null),chosen=null;
   if(subjRules(ex)){   // compulsory / optional subjects: ask which optional subjects, unless an attempt is already running
