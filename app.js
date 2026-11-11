@@ -287,7 +287,7 @@ function renderExam(){
   wireGpaPanel();refreshPalette();tickTimer();
 }
 
-async function saveAnswer(q){try{let a=state.answers[q.id]||{};await rpc('save_exam_answer',{p_attempt_id:state.attempt.id,p_exam_question_id:q.id,p_selected_option_id:a.selected_option_id||null,p_written_answer_text:a.written_answer_text||null,p_answer_image_path:a.answer_image_path||null});return true}catch(e){err(e);return false}}
+async function saveAnswer(q){try{let a=state.answers[q.id]||{};if(!a.selected_option_id&&!String(a.written_answer_text||'').trim()&&!a.answer_image_path)return true;/* nothing to save: blank answers are allowed, the server rejects empty saves */await rpc('save_exam_answer',{p_attempt_id:state.attempt.id,p_exam_question_id:q.id,p_selected_option_id:a.selected_option_id||null,p_written_answer_text:a.written_answer_text||null,p_answer_image_path:a.answer_image_path||null});return true}catch(e){err(e);return false}}
 async function saveCurrent(){for(const q of state.questions){let card=$$('.question-card').find(c=>c.dataset.qid===q.id),ta=card&&$('.written-answer',card);if(ta)state.answers[q.id]={...(state.answers[q.id]||{}),written_answer_text:ta.value};if(ta||state.answers[q.id]){const ok=await saveAnswer(q);if(!ok)throw Error('Your answers could not be saved. Please check your connection and retry before submitting.')}}return true}
 function setAnswerUploadStatus(message,isError=false,q){
   const card=q&&$$('.question-card').find(c=>c.dataset.qid===q.id);
