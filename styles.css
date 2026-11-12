@@ -267,6 +267,10 @@ main.lp .home-banner-stack{margin:0}
 [data-theme=dark] .status-steps{background:#101a30;color:#c4cde0}
 
 /* ---- Single-page scrollable exam ---- */
+/* Exam page has no sidebar: the dashboard's 2-column app-shell grid (250px 1fr) squeezed it into the sidebar column. */
+.app-shell.exam-single{display:block;grid-template-columns:none}
+.exam-single .main-area{width:100%;min-width:0}
+.exam-single .exam-questions{min-width:0;overflow-wrap:anywhere}
 .exam-topbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 24px;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 4px 18px #17274712}
 .exam-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .exam-top-right{display:flex;align-items:center;gap:12px;flex:none}
