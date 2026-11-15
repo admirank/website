@@ -422,3 +422,12 @@ main.lp .home-banner-stack{margin:0}
   .db-cards{grid-template-columns:1fr}
   .db-prev{flex-wrap:wrap}
 }
+
+/* ===== Usage report ===== */
+.us-row{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr auto;gap:12px;align-items:center;padding:8px 0}
+.us-name{display:flex;flex-direction:column;min-width:0}.us-name small{color:var(--muted);font-size:12px}
+.us-bar{height:10px;background:var(--line);border-radius:999px;overflow:hidden}.us-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--blue2));border-radius:999px}
+.us-val{min-width:84px;text-align:right;font-variant-numeric:tabular-nums}
+.us-det{border-top:1px solid var(--line)}.us-det summary{cursor:pointer;list-style:none}.us-det summary::-webkit-details-marker{display:none}
+.us-sub{padding:2px 0 10px 14px;font-size:13px;color:var(--muted)}.us-sub>div{display:grid;grid-template-columns:1fr auto 84px;gap:12px;padding:3px 0}.us-sub b{text-align:right;color:var(--ink)}
+@media(max-width:600px){.us-row{grid-template-columns:1fr auto}.us-row .us-bar{grid-column:1/-1;order:3}.us-sub>div{grid-template-columns:1fr auto}.us-sub>div span:nth-child(2){display:none}}
