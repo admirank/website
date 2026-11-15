@@ -822,30 +822,56 @@ async function evaluatorPage(){
 let evalCtx=null;
 async function evalView(){
   const c=evalCtx;if(!c)return toast('Open the Assigned scripts page first.',true);
-  const mine=await result(sb.from('answer_evaluations').select('student_answer_id,marks_awarded').eq('evaluator_id',state.user.id)).catch(()=>[]),done={};
-  mine.forEach(x=>{done[x.student_answer_id]=x.marks_awarded});
+  const mine=await result(sb.from('answer_evaluations').select('id,student_answer_id,marks_awarded,created_at').eq('evaluator_id',state.user.id).order('created_at',{ascending:true})).catch(()=>[]),done={},evalId={},pending={},saveState={};
+  mine.forEach(x=>{done[x.student_answer_id]=Number(x.marks_awarded);evalId[x.student_answer_id]=x.id});
   const items=c.written.filter(a=>a.answer_image_path||(a.written_answer_text||'').trim()).sort((a,b)=>String(a.exam_question_id).localeCompare(String(b.exam_question_id))||String(a.attempt_id).localeCompare(String(b.attempt_id)));
   if(!items.length)return toast('No written scripts to evaluate yet.',true);
   let i=Math.max(0,items.findIndex(a=>done[a.id]==null)),busy=false,zoom=false;
   const KEY='admirank-ev-buttons',saved=()=>(localStorage.getItem(KEY)||'').split(',').map(x=>parseFloat(x)).filter(x=>!isNaN(x)&&x>=0);
   const btnsFor=max=>{max=Number(max)||0;let v=saved();if(!v.length)v=[max,max>1?1:n2(max/2),0];v=v.filter(x=>x<=max);if(!v.includes(max))v.unshift(max);if(!v.includes(0))v.push(0);return [...new Set(v.map(n2))].sort((a,b)=>b-a)};
   const ov=document.createElement('div');ov.id='ev-overlay';ov.style.cssText='position:fixed;inset:0;z-index:9999;background:var(--bg,#0b0f17);color:var(--text,inherit);overflow:hidden';document.body.appendChild(ov);document.documentElement.style.overflow='hidden';
-  const close=()=>{document.removeEventListener('keydown',key);ov.remove();document.documentElement.style.overflow='';render()};
+  const close=()=>{clearTimeout(advTimer);document.removeEventListener('keydown',key);ov.remove();document.documentElement.style.overflow='';render()};
   const nextUndone=from=>{for(let k=from+1;k<items.length;k++)if(done[items[k].id]==null)return k;return -1};
-  const mark=async v=>{const a=items[i];if(busy)return;busy=true;try{const {error}=await sb.from('answer_evaluations').insert({student_answer_id:a.id,evaluator_id:state.user.id,marks_awarded:v,feedback:'',evaluation_status:'submitted'});if(error)throw error;done[a.id]=v;const n=nextUndone(i);if(n>=0)i=n;else toast('All scripts marked.')}catch(e){err(e)}finally{busy=false;draw()}};
-  const go2=d=>{const n=i+d;if(n>=0&&n<items.length){i=n;draw();ov.querySelector('#ev-left')?.scrollTo(0,0)}};
+  let advTimer=null;
+  const mark=async v=>{
+    const a=items[i];if(!a||busy)return;
+    clearTimeout(advTimer);busy=true;pending[a.id]=v;saveState[a.id]='saving';draw();
+    try{
+      let saved=false;
+      if(evalId[a.id]){
+        const r=await sb.from('answer_evaluations').update({marks_awarded:v}).eq('id',evalId[a.id]).select('id');
+        if(r.error)throw r.error;
+        saved=!!(r.data&&r.data.length);
+      }
+      if(!saved){
+        const r=await sb.from('answer_evaluations').insert({student_answer_id:a.id,evaluator_id:state.user.id,marks_awarded:v,feedback:'',evaluation_status:'submitted'}).select('id').single();
+        if(r.error){
+          if(r.error.code==='23505')throw Error('Could not change an existing mark. Run supabase-migration-v19-evaluator-update-marks.sql in the Supabase SQL Editor, then try again.');
+          throw r.error;
+        }
+        evalId[a.id]=r.data.id;
+      }
+      done[a.id]=v;delete pending[a.id];saveState[a.id]='saved';
+      toast('Mark saved: '+v);
+      const from=i,n=nextUndone(i);
+      if(n>=0)advTimer=setTimeout(()=>{if(i===from){i=n;draw();ov.querySelector('#ev-left')?.scrollTo(0,0)}},700);
+      else if(items.every(x=>done[x.id]!=null))toast('All scripts marked.');
+    }catch(e){delete pending[a.id];delete saveState[a.id];err(e)}
+    finally{busy=false;draw()}
+  };
+  const go2=d=>{clearTimeout(advTimer);const n=i+d;if(n>=0&&n<items.length){i=n;draw();ov.querySelector('#ev-left')?.scrollTo(0,0)}};
   function key(e){if(['INPUT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='Escape')close();else if(e.key==='ArrowRight')go2(1);else if(e.key==='ArrowLeft')go2(-1);else if(/^[1-9]$/.test(e.key)){const q=c.qs.find(x=>x.id===items[i].exam_question_id),b=btnsFor(q?.marks)[Number(e.key)-1];if(b!==undefined)mark(b)}}
   document.addEventListener('keydown',key);
   function draw(){
-    const a=items[i],q=c.qs.find(x=>x.id===a.exam_question_id)||{},url=c.mediaUrls[a.id],isPdf=/\.pdf($|\?)/i.test(a.answer_image_path||''),d=done[a.id],left=ov.querySelector('#ev-left')?.scrollTop||0;
+    const a=items[i],q=c.qs.find(x=>x.id===a.exam_question_id)||{},url=c.mediaUrls[a.id],isPdf=/\.pdf($|\?)/i.test(a.answer_image_path||''),d=done[a.id],sel=pending[a.id]!=null?pending[a.id]:d,st=saveState[a.id],left=ov.querySelector('#ev-left')?.scrollTop||0;
     const media=a.answer_image_path?(url?(isPdf?`<iframe src="${esc(url)}" style="width:100%;height:calc(100vh - 24px);border:0;background:#fff"></iframe>`:`<img src="${esc(url)}" alt="Answer script" style="display:block;width:${zoom?'180%':'100%'};max-width:none;height:auto;cursor:zoom-${zoom?'out':'in'}" id="ev-img">`):'<p class="muted">Could not load the file.</p>'):'';
-    ov.innerHTML=`<style>#ev-wrap{display:grid;grid-template-columns:2fr 1fr;height:100%}#ev-left{overflow:auto;padding:12px;background:#10141c}#ev-right{overflow:auto;padding:18px;border-left:1px solid var(--line,#2a3142)}.ev-mark{font-size:22px;font-weight:800;padding:16px 8px;min-width:84px}@media(max-width:800px){#ev-wrap{grid-template-columns:1fr;grid-template-rows:60% 40%}#ev-right{border-left:0;border-top:1px solid var(--line,#2a3142)}}</style>
+    ov.innerHTML=`<style>#ev-wrap{display:grid;grid-template-columns:2fr 1fr;height:100%}#ev-left{overflow:auto;padding:12px;background:#10141c}#ev-right{overflow:auto;padding:18px;border-left:1px solid var(--line,#2a3142)}.ev-mark{font-size:22px;font-weight:800;padding:16px 8px;min-width:84px;border:2px solid var(--line,#2a3142);position:relative}.ev-mark.ev-sel{border:4px solid #22c55e;background:rgba(34,197,94,.16);box-shadow:0 0 0 3px rgba(34,197,94,.3);transform:scale(1.04)}.ev-mark.ev-sel::after{content:'✓';position:absolute;top:2px;right:6px;font-size:13px;color:#22c55e}@media(max-width:800px){#ev-wrap{grid-template-columns:1fr;grid-template-rows:60% 40%}#ev-right{border-left:0;border-top:1px solid var(--line,#2a3142)}}</style>
 <div id="ev-wrap"><div id="ev-left">${a.written_answer_text?`<div class="notice-card" style="white-space:pre-wrap">${esc(a.written_answer_text)}</div>`:''}${media}${!media&&!a.written_answer_text?'<p class="muted">No response.</p>':''}</div>
 <div id="ev-right"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><strong>Script ${i+1} / ${items.length}</strong><button class="btn btn-outline btn-sm" id="ev-close">✕ Close</button></div>
 <p class="muted" style="font-size:12px;margin:6px 0 14px">${Object.keys(done).length?`${items.filter(x=>done[x.id]!=null).length} marked · ${items.filter(x=>done[x.id]==null).length} left`:`${items.length} left`}</p>
 <div class="notice-card"><strong>Question</strong><div style="white-space:pre-wrap;margin-top:6px">${esc(q.question_text_snapshot||'—')}</div>${q.correct_answer_text_snapshot?`<p class="muted" style="margin:10px 0 0"><strong>Model answer:</strong> ${esc(q.correct_answer_text_snapshot)}</p>`:''}</div>
 <p style="margin:16px 0 8px"><strong>Marks</strong> <span class="muted">(out of ${q.marks??'?'})</span></p>
-${d!=null?`<div class="notice-card"><strong>Marked: ${d}</strong><p class="muted" style="margin:6px 0 0;font-size:12px">Saved. To change it, click another mark below.</p></div>`:''}<div style="display:flex;flex-wrap:wrap;gap:10px">${btnsFor(q.marks).map((b,k)=>`<button class="btn ${k===0?'btn-primary':'btn-outline'} ev-mark" data-v="${b}" ${busy?'disabled':''}>${b}<br><small style="font-weight:400;font-size:11px">key ${k+1}</small></button>`).join('')}</div><p class="muted" style="font-size:12px;margin-top:12px">One click saves the mark (no approval needed) and opens the next script. Wrong click? Open it again with ← and click the right mark.</p>
+${st==='saving'?`<div class="notice-card"><strong>Saving…</strong></div>`:d!=null?`<div class="notice-card" style="border-color:#22c55e"><strong>✓ Saved: ${d}</strong><p class="muted" style="margin:6px 0 0;font-size:12px">To change it, click another mark below.</p></div>`:''}<div style="display:flex;flex-wrap:wrap;gap:10px">${btnsFor(q.marks).map((b,k)=>`<button class="btn btn-outline ev-mark ${sel!=null&&Number(sel)===Number(b)?'ev-sel':''}" data-v="${b}" aria-pressed="${sel!=null&&Number(sel)===Number(b)}" ${busy?'disabled':''}>${b}<br><small style="font-weight:400;font-size:11px">key ${k+1}</small></button>`).join('')}</div><p class="muted" style="font-size:12px;margin-top:12px">One click saves the mark (no approval needed) and opens the next script. Wrong click? Open it again with ← and click the right mark.</p>
 <div style="display:flex;gap:8px;margin-top:18px"><button class="btn btn-outline" id="ev-prev" ${i===0?'disabled':''}>← Previous</button><button class="btn btn-outline" id="ev-next" ${i===items.length-1?'disabled':''}>Next →</button>${a.answer_image_path&&!isPdf?`<button class="btn btn-outline" id="ev-zoom">${zoom?'Fit width':'Zoom in'}</button>`:''}</div>
 <div class="field" style="margin-top:18px"><label>Mark buttons (comma separated, e.g. 2.5,1,0)</label><input id="ev-cfg" value="${esc(saved().join(','))}" placeholder="auto: full, half, 0"></div></div></div>`;
     ov.querySelector('#ev-left').scrollTop=left;
