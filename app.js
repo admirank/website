@@ -495,15 +495,28 @@ async function resultDetail(id){
   let r=await result(sb.from('exam_results').select('*').eq('attempt_id',id).maybeSingle()).catch(()=>null);
   let a=await result(sb.from('exam_attempts').select('*').eq('id',id).maybeSingle()).catch(()=>null);
   let e=r?await result(sb.from('exams').select('*').eq('id',r.exam_id).maybeSingle()).catch(()=>null):null;
+  const examId=r?.exam_id||a?.exam_id||null;
   let answers=a?await result(sb.from('student_answers').select('*').eq('attempt_id',id)).catch(()=>[]):[];
-  let pub=r?await result(sb.from('exam_result_publications').select('*').eq('exam_id',r.exam_id).maybeSingle()).catch(()=>null):null;
-  let detail=[];
-  if(answers.length){let ids=answers.map(x=>x.exam_question_id);detail=await result(sb.from('exam_questions').select('id,question_text_snapshot,question_type,correct_answer_text_snapshot,explanation_snapshot').in('id',ids)).catch(()=>[])}
+  let pub=examId?await result(sb.from('exam_result_publications').select('*').eq('exam_id',examId).maybeSingle()).catch(()=>null):null;
+  const showCorrect=!!pub?.show_correct_answers;
+  /* ALL questions of this attempt (not only answered ones), in the order the student saw them */
+  let allQ=examId?await result(sb.from('exam_questions').select('id,question_order,question_type,marks,negative_marks,question_text_snapshot,correct_answer_text_snapshot,explanation_snapshot,subject_name_snapshot').eq('exam_id',examId).order('question_order')).catch(()=>[]):[];
+  const order=Array.isArray(a?.question_order)?a.question_order:[];
+  let qs=allQ;
+  if(order.length){const set=new Set(order);qs=allQ.filter(q=>set.has(q.id)).sort((x,y)=>order.indexOf(x.id)-order.indexOf(y.id))}
+  /* options: secure RPC first (v26 migration), fall back to direct read */
+  let optRows=[];
+  try{const o=await rpc('student_result_review',{p_attempt_id:id});optRows=(Array.isArray(o)?o:[]).map(x=>({qid:x.exam_question_id,id:x.option_id,label:x.option_label,text:x.option_text,ord:x.display_order,correct:x.is_correct}))}
+  catch(x){
+    console.warn('student_result_review not available, using direct read:',x);
+    if(qs.length){const o=await result(sb.from('exam_question_options').select('*').in('exam_question_id',qs.map(q=>q.id)).order('display_order')).catch(()=>[]);optRows=o.map(x=>({qid:x.exam_question_id,id:x.id,label:x.option_label,text:x.option_text,ord:x.display_order,correct:showCorrect?x.is_correct:null}))}
+  }
+  const optBy={};optRows.forEach(o=>{(optBy[o.qid]=optBy[o.qid]||[]).push(o)});Object.values(optBy).forEach(l=>l.sort((x,y)=>(x.ord||0)-(y.ord||0)));
   const baseOut=a?.total_marks??e?.total_marks??null,outOf=baseOut!=null&&e?.include_gpa?n2(Number(baseOut)+10*gpaMultiplier(e)):baseOut;
+  const ansBy={};answers.forEach(x=>{ansBy[x.exam_question_id]=x});
   let subjBreak='';
-  if(r&&a&&subjRules(e)){   // subject-wise marks for compulsory/optional exams (only the subjects this student sat)
-    const allQ=await result(sb.from('exam_questions').select('id,subject_name_snapshot,marks').eq('exam_id',r.exam_id)).catch(()=>[]);
-    const inA=new Set(Array.isArray(a.question_order)?a.question_order:[]),got={},by={};
+  if(r&&a&&subjRules(e)){
+    const inA=new Set(order),got={},by={};
     answers.forEach(x=>{got[x.exam_question_id]=Number(x.obtained_marks||0)});
     allQ.filter(q=>inA.has(q.id)).forEach(q=>{const k=q.subject_name_snapshot||'—';by[k]=by[k]||{got:0,out:0};by[k].out+=Number(q.marks||0);by[k].got+=got[q.id]||0});
     const ks=Object.keys(by);
@@ -511,14 +524,84 @@ async function resultDetail(id){
   }
   const mediaUrls={};
   await Promise.all(answers.filter(x=>x.answer_image_path).map(async x=>{mediaUrls[x.id]=await getAnswerSignedUrl(x.answer_image_path)}));
-  const inkBy={};   // evaluator pen marks, merged per answer (needs supabase-migration-v25-student-view-annotations.sql)
+  const inkBy={};   // evaluator pen marks (needs supabase-migration-v25)
   if(answers.length){
     const ann=await sb.from('answer_annotations').select('student_answer_id,strokes').in('student_answer_id',answers.map(x=>x.id));
     if(ann.error)console.warn('Pen marks could not be loaded:',ann.error);
     else(ann.data||[]).forEach(x=>{if(Array.isArray(x.strokes))inkBy[x.student_answer_id]=(inkBy[x.student_answer_id]||[]).concat(x.strokes)});
   }
-  return shell(`<div class="page-title"><div><a href="#results" class="muted">← Results</a><h1 style="margin-top:12px">${esc(e?.title||'Result details')}</h1></div></div>${r?`<div class="stat-grid"><div class="stat-card"><div class="stat-label">Total marks</div><strong>${r.total_marks}${outOf!=null?` <small class="muted">/ ${outOf}</small>`:''}</strong></div><div class="stat-card"><div class="stat-label">MCQ marks</div><strong>${r.mcq_marks}</strong></div><div class="stat-card"><div class="stat-label">Written marks</div><strong>${r.written_marks}</strong></div>${e?.include_gpa?`<div class="stat-card"><div class="stat-label">GPA marks</div><strong>${r.gpa_marks??0}</strong>${a?.ssc_gpa!=null&&a?.hsc_gpa!=null?` <small class="muted">SSC ${a.ssc_gpa} + HSC ${a.hsc_gpa}</small>`:''}</div>`:''}<div class="stat-card"><div class="stat-label">Rank</div><strong>${r.rank_position??'—'}</strong></div></div>`:''}${subjBreak}<section class="panel"><h3>Submitted answers</h3>${answers.length?answers.map(ans=>{let q=detail.find(x=>x.id===ans.exam_question_id);return `<div class="notice-card"><strong>${esc(q?.question_text_snapshot||'Question')}</strong><p>Your written answer: ${esc(ans.written_answer_text||(ans.selected_option_id?'MCQ option submitted':(ans.answer_image_path?'Image/PDF submitted':'Not answered')))}</p>${(ans.answer_image_path&&mediaUrls[ans.id]&&!/\.pdf$/i.test(String(ans.answer_image_path).split('?')[0]))?inkImageMarkup(mediaUrls[ans.id],inkBy[ans.id]):answerMediaMarkup(ans.answer_image_path,mediaUrls[ans.id])}<p>Marks: ${ans.obtained_marks??'Pending'} · ${status(ans.evaluation_status||'pending')}</p>${pub?.show_correct_answers?`<p>Correct answer: ${esc(q?.correct_answer_text_snapshot||'See correct option')}</p><p>${esc(q?.explanation_snapshot||'')}</p>`:''}</div>`}).join(''):'<div class="empty">No answer details available.</div>'}</section>`)
+  /* ---- classify every question ---- */
+  const rows=qs.map((q,idx)=>{
+    const an=ansBy[q.id]||null,type=String(q.question_type||'mcq').toLowerCase()==='written'?'written':'mcq',opts=optBy[q.id]||[];
+    const hasText=!!String(an?.written_answer_text||'').trim(),hasImg=!!an?.answer_image_path,hasSel=!!an?.selected_option_id;
+    const answered=type==='mcq'?hasSel:(hasText||hasImg);
+    let st='blank';
+    if(answered){
+      if(type==='mcq'){const picked=opts.find(o=>o.id===an.selected_option_id),c=an.is_correct!=null?an.is_correct:picked?.correct;st=c===true?'correct':c===false?'wrong':'answered'}
+      else st=an.evaluation_status==='manual_evaluated'?'evaluated':'pending';
+    }
+    return {q,an,type,opts,st,n:idx+1,hasText,hasImg,hasSel};
+  });
+  const cnt=f=>rows.filter(x=>f==='all'||f===x.type||f===x.st).length;
+  const mcqRows=rows.filter(x=>x.type==='mcq'),mcqAns=mcqRows.filter(x=>x.st!=='blank').length;
+  const mcqC=cnt('correct'),mcqW=cnt('wrong'),mcqB=mcqRows.filter(x=>x.st==='blank').length,wrRows=rows.filter(x=>x.type==='written'),wrB=wrRows.filter(x=>x.st==='blank').length,wrPend=wrRows.filter(x=>x.st==='pending').length;
+  const pct=n=>mcqRows.length?(n/mcqRows.length*100).toFixed(1):0;
+  const subjects=[...new Set(rows.map(x=>x.q.subject_name_snapshot).filter(Boolean))];
+  const stateInfo={correct:['ok','✓ Correct'],wrong:['bad','✗ Wrong'],blank:['blank','○ Unanswered'],answered:['sel','Answered'],pending:['pend','⏳ Awaiting evaluation'],evaluated:['ok','✓ Evaluated']};
+  const card=x=>{
+    const {q,an,type,opts,st}=x,[cls,label]=stateInfo[st]||['sel',''];
+    const full=n2(q.marks||0),got=an&&an.obtained_marks!=null&&st!=='pending'?n2(an.obtained_marks):(st==='blank'?0:null);
+    const marksTxt=got==null?`<span class="rv-marks-pend">Pending / ${full}</span>`:`<span class="rv-marks ${got>0?'pos':got<0?'neg':''}">${got>0&&type==='mcq'?'+':''}${got}</span><span class="rv-marks-of"> / ${full}</span>`;
+    let body='';
+    if(type==='mcq'){
+      if(opts.length){
+        body=`<div class="rv-opts">${opts.map(o=>{
+          const picked=an?.selected_option_id===o.id,isRight=o.correct===true||(picked&&st==='correct');
+          const c=[picked?'picked':'',isRight?'right':'',picked&&st==='wrong'?'wrong':''].filter(Boolean).join(' ');
+          return `<div class="rv-opt ${c}"><span class="rv-olabel">${esc(o.label||'')}</span><span class="rv-otext">${esc(o.text||'')}</span>${picked?`<span class="rv-pill you">Your answer</span>`:''}${isRight&&showCorrect?`<span class="rv-pill ok">Correct answer</span>`:''}</div>`}).join('')}</div>`;
+      }else body=x.hasSel?`<div class="rv-note">Your answer was recorded, but the option text could not be loaded. Ask the administrator to run supabase-migration-v26-student-result-review.sql.</div>`:'';
+      if(st==='blank')body=`<div class="rv-blank">You did not answer this question.</div>`+body;
+      if(showCorrect&&q.explanation_snapshot)body+=`<div class="rv-expl"><strong>Explanation</strong><div>${esc(q.explanation_snapshot)}</div></div>`;
+    }else{
+      if(st==='blank')body=`<div class="rv-blank">You did not submit an answer for this question.</div>`;
+      else{
+        if(x.hasText)body+=`<div class="rv-ans"><div class="rv-ans-h">Your written answer</div><div class="rv-ans-t">${esc(an.written_answer_text)}</div></div>`;
+        if(x.hasImg){
+          const url=mediaUrls[an.id],isPdf=/\.pdf$/i.test(String(an.answer_image_path).split('?')[0]),strokes=inkBy[an.id]||[];
+          body+=`<div class="rv-ans"><div class="rv-ans-h">Your answer script${strokes.length&&!isPdf?' <span class="rv-pill you">Evaluator marks shown</span>':''}</div>${url?(isPdf?answerMediaMarkup(an.answer_image_path,url):inkImageMarkup(url,strokes)):'<div class="rv-note">The file could not be opened.</div>'}</div>`;
+        }
+      }
+      if(showCorrect&&q.correct_answer_text_snapshot)body+=`<div class="rv-expl"><strong>Model answer</strong><div>${esc(q.correct_answer_text_snapshot)}</div></div>`;
+      if(showCorrect&&q.explanation_snapshot)body+=`<div class="rv-expl"><strong>Explanation</strong><div>${esc(q.explanation_snapshot)}</div></div>`;
+    }
+    return `<article class="rv-q ${cls}" id="rv-q-${x.n}" data-type="${type}" data-state="${st}" data-subj="${esc(q.subject_name_snapshot||'')}"><header class="rv-qh"><span class="rv-qn">Q${x.n}</span><span class="rv-tag">${type==='mcq'?'MCQ':'Written'}</span>${q.subject_name_snapshot?`<span class="rv-tag soft">${esc(q.subject_name_snapshot)}</span>`:''}<span class="rv-state ${cls}">${label}</span><span class="rv-qm">${marksTxt}</span></header><div class="rv-qt">${esc(q.question_text_snapshot||'Question')}</div>${body}</article>`;
+  };
+  const chip=(f,l)=>`<button type="button" class="rv-chip ${f==='all'?'on':''}" data-rv-f="${f}">${l} <em>${cnt(f)}</em></button>`;
+  const review=rows.length?`<section class="panel rv-panel"><div class="rv-summary"><div class="rv-sum-i"><strong>${rows.length}</strong><span>Questions</span></div><div class="rv-sum-i ok"><strong>${mcqC}</strong><span>MCQ correct</span></div><div class="rv-sum-i bad"><strong>${mcqW}</strong><span>MCQ wrong</span></div><div class="rv-sum-i blank"><strong>${mcqB+wrB}</strong><span>Unanswered</span></div><div class="rv-sum-i"><strong>${wrRows.length-wrB}/${wrRows.length}</strong><span>Written submitted${wrPend?` · ${wrPend} pending`:''}</span></div></div>${mcqRows.length?`<div class="rv-bar" title="MCQ: ${mcqC} correct, ${mcqW} wrong, ${mcqRows.length-mcqC-mcqW} unanswered/other"><i class="ok" style="width:${pct(mcqC)}%"></i><i class="bad" style="width:${pct(mcqW)}%"></i><i class="blank" style="width:${pct(mcqRows.length-mcqC-mcqW)}%"></i></div>`:''}
+<div class="rv-palette">${rows.map(x=>`<button type="button" class="rv-dot ${(stateInfo[x.st]||['sel'])[0]}" data-rv-jump="${x.n}" title="Q${x.n}: ${esc((stateInfo[x.st]||['',''])[1])}">${x.n}</button>`).join('')}</div>
+<div class="rv-filters" id="rv-filters">${chip('all','All')}${chip('mcq','MCQ')}${chip('written','Written')}${chip('correct','Correct')}${chip('wrong','Wrong')}${chip('blank','Unanswered')}${subjects.length>1?`<select id="rv-subj" class="rv-subj"><option value="">All subjects</option>${subjects.map(sj=>`<option value="${esc(sj)}">${esc(sj)}</option>`).join('')}</select>`:''}</div>
+<div class="rv-count" id="rv-count" aria-live="polite">Showing ${rows.length} of ${rows.length} questions</div>
+<div id="rv-box" data-f="all" data-s="">${rows.map(card).join('')}<div class="empty rv-empty" id="rv-empty" hidden>No questions match this filter.</div></div></section>`
+  :`<section class="panel"><div class="empty">No question details are available for this attempt yet.</div></section>`;
+  return shell(`<div class="page-title"><div><a href="#results" class="muted">← Results</a><h1 style="margin-top:12px">${esc(e?.title||'Result details')}</h1><p>${a?.submitted_at?`Submitted ${date(a.submitted_at)}`:''}${a?.attempt_number?` · Attempt ${a.attempt_number}`:''}</p></div></div>${r?`<div class="stat-grid"><div class="stat-card"><div class="stat-label">Total marks</div><strong>${r.total_marks}${outOf!=null?` <small class="muted">/ ${outOf}</small>`:''}</strong></div><div class="stat-card"><div class="stat-label">MCQ marks</div><strong>${r.mcq_marks}</strong></div><div class="stat-card"><div class="stat-label">Written marks</div><strong>${r.written_marks}</strong></div>${e?.include_gpa?`<div class="stat-card"><div class="stat-label">GPA marks</div><strong>${r.gpa_marks??0}</strong>${a?.ssc_gpa!=null&&a?.hsc_gpa!=null?` <small class="muted">SSC ${a.ssc_gpa} + HSC ${a.hsc_gpa}</small>`:''}</div>`:''}<div class="stat-card"><div class="stat-label">Rank</div><strong>${r.rank_position??'—'}</strong></div></div>`:''}${subjBreak}${review}`)
 }
+/* ---- result review: filters + jump palette (delegated, bound once) ---- */
+function applyReviewFilter(){
+  const box=document.getElementById('rv-box');if(!box)return;
+  const f=box.dataset.f||'all',sj=box.dataset.s||'';let shown=0,total=0;
+  box.querySelectorAll('.rv-q').forEach(c=>{total++;const ok=(f==='all'||c.dataset.type===f||c.dataset.state===f)&&(!sj||c.dataset.subj===sj);c.hidden=!ok;if(ok)shown++});
+  const em=document.getElementById('rv-empty');if(em)em.hidden=shown>0;
+  const ct=document.getElementById('rv-count');if(ct)ct.textContent=`Showing ${shown} of ${total} questions`;
+  document.querySelectorAll('#rv-filters .rv-chip').forEach(b=>b.classList.toggle('on',b.dataset.rvF===f));
+}
+document.addEventListener('click',e=>{
+  const c=e.target.closest('[data-rv-f]');
+  if(c){const box=document.getElementById('rv-box');if(box){box.dataset.f=c.dataset.rvF;applyReviewFilter()}return}
+  const j=e.target.closest('[data-rv-jump]');
+  if(j){const box=document.getElementById('rv-box');if(box){box.dataset.f='all';box.dataset.s='';const sel=document.getElementById('rv-subj');if(sel)sel.value='';applyReviewFilter()}
+    document.getElementById('rv-q-'+j.dataset.rvJump)?.scrollIntoView({behavior:'smooth',block:'start'})}
+});
+document.addEventListener('change',e=>{if(e.target.id==='rv-subj'){const box=document.getElementById('rv-box');if(box){box.dataset.s=e.target.value;applyReviewFilter()}}});
 
 async function leaderboard(){let admin=state.roles.includes('admin');let exams=await result((admin?sb.from('exams').select('id,title'):sb.from('exams').select('id,title').eq('status','published')).order('start_time',{ascending:false})).catch(()=>[]);let pubs=admin?await result(sb.from('exam_result_publications').select('exam_id,is_published')).catch(()=>[]):[];const isPub=id=>pubs.some(p=>p.exam_id===id&&p.is_published);let selected=new URLSearchParams(location.hash.split('?')[1]||'').get('exam')||exams[0]?.id;let rows=selected?await rpc('public_exam_leaderboard',{p_exam_id:selected}).catch(()=>[]):[];return shell(`<div class="page-title"><div><h1>Leaderboard</h1><p>Published examination rankings.</p></div>${admin&&selected?`<button class="btn btn-primary" id="lb-add" data-exam="${selected}">+ Add entry</button>`:''}</div><section class="panel"><div class="field" style="max-width:420px"><label>Select examination</label><select id="leaderboard-exam">${exams.map(e=>`<option value="${e.id}" ${e.id===selected?'selected':''}>${esc(e.title)}${admin&&!isPub(e.id)?' — (not published)':''}</option>`).join('')}</select></div>${admin&&selected?(isPub(selected)?`<div class="notice-card" style="margin-top:14px"><strong>✓ Published</strong><p>Students can see this leaderboard, including the manual entries below.</p></div>`:`<div class="notice-card" style="margin-top:14px"><strong>Not published yet — students cannot see this leaderboard</strong><p>Add or edit manual entries now (only you can see them). When ready, publish to show real results and manual entries together.</p><button class="btn btn-primary btn-sm" onclick="window.publishLb('${selected}')">Publish results &amp; leaderboard</button></div>`):''}${rows.length?`<div class="table-wrap"><table><thead><tr><th>Rank</th><th>Student</th><th>Marks</th>${admin?'<th></th>':''}</tr></thead><tbody>${rows.map(r=>`<tr><td><strong>#${r.rank_position??'—'}</strong></td><td><div class="profile-row"><div class="avatar">${r.profile_picture_path?`<img src="${esc(picture(r.profile_picture_path))}" alt="">`:esc((r.student_name||'S').slice(0,1).toUpperCase())}</div><strong>${esc(r.student_name||'Student')}</strong></div></td><td><strong>${r.total_marks}</strong></td>${admin?`<td>${r.is_manual?`<button class="btn btn-outline" data-lb-edit="${r.entry_id}" data-name="${esc(r.student_name)}" data-marks="${r.total_marks}" data-exam="${selected}">Edit</button> <button class="btn btn-outline" data-lb-del="${r.entry_id}">Delete</button>`:''}</td>`:''}</tr>`).join('')}</tbody></table></div>`:(admin?'<div class="empty">No entries yet. Click “+ Add entry” to add manual entries.</div>':'<div class="empty">No published leaderboard is available for this exam yet.</div>')}</section>`)}
 function showLeaderboardEntryForm(examId,entry){document.body.insertAdjacentHTML('beforeend',`<div class="modal-backdrop" id="modal"><form class="modal" id="lb-form"><h2>${entry?'Edit':'Add'} leaderboard entry</h2><div class="field"><label>Student name</label><input name="student_name" required maxlength="120"></div><div class="field"><label>Marks</label><input name="total_marks" type="number" step="any" required></div><div class="modal-actions"><button type="button" class="btn btn-outline" id="cancel-modal">Cancel</button><button class="btn btn-primary">Save</button></div></form></div>`);let form=$('#lb-form');if(entry){form.elements.student_name.value=entry.name;form.elements.total_marks.value=entry.marks}$('#cancel-modal').onclick=()=>$('#modal').remove();form.onsubmit=async e=>{e.preventDefault();let obj={student_name:form.elements.student_name.value.trim(),total_marks:Number(form.elements.total_marks.value)};if(!obj.student_name||!Number.isFinite(obj.total_marks))return;try{let q=sb.from('leaderboard_manual_entries');let res=entry?await q.update(obj).eq('id',entry.id):await q.insert({...obj,exam_id:examId});if(res.error)throw res.error;$('#modal').remove();toast('Leaderboard entry saved.');render()}catch(x){err(x)}}}
