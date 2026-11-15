@@ -187,8 +187,8 @@ function normalizeLogin(raw){
     return {email:v.toLowerCase(),phone:'',isPhone:false};
   }
   let d=v.replace(/[\s\-().]/g,'').replace(/^\+?88/,'');
-  if(/^1[3-9]\d{8}$/.test(d))d='0'+d;
-  if(!/^01[3-9]\d{8}$/.test(d))throw Error('সঠিক মোবাইল নম্বর দিন (যেমন: 01712345678)।');
+  if(/^1\d{9}$/.test(d))d='0'+d;
+  if(!/^01\d{9}$/.test(d))throw Error('মোবাইল নম্বর ১১ সংখ্যার হতে হবে এবং 01 দিয়ে শুরু হতে হবে।');
   return {email:`${d}@${LOGIN_DOMAIN}`,phone:d,isPhone:true};
 }
 function shownLogin(){
@@ -221,10 +221,11 @@ async function submitAuth(form,kind){
     let name=String(fd.get('full_name')||'').trim();if(!name)throw Error('আপনার পূর্ণ নাম দিন।');
     let {data,error}=await sb.auth.signUp({email:id.email,password,options:{data:{full_name:name,phone:id.phone}}});
     if(error)throw Error(authMsg(error));
-    // If "Confirm email" is still ON in Supabase there is no session; guard so students aren't stuck.
-    if(!data.session){let r=await sb.auth.signInWithPassword({email:id.email,password});if(r.error)throw Error('রেজিস্ট্রেশন হয়েছে কিন্তু লগইন করা যায়নি। হোয়াটসঅ্যাপ হেল্পলাইনে যোগাযোগ করুন।')}
-    await loadUser();go('dashboard');
-    notify('success','অ্যাকাউন্ট তৈরি হয়েছে','আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে।',5000);
+    // Registration done: do not auto-login; send the student to the login box.
+    await sb.auth.signOut().catch(()=>{});
+    state.user=null;state.profile=null;state.roles=[];
+    go('login');
+    notify('success','রেজিস্ট্রেশন সম্পন্ন হয়েছে','আপনার রেজিস্ট্রেশন সম্পন্ন হয়েছে। এখন লগইন করুন।',7000);
   }else{
     loginOverlay(true);
     try{
