@@ -355,7 +355,9 @@ function confirmSubmitModal({title,message,confirmText,cancelText='ফিরে 
 }
 async function lockMcqPhase(auto=false){if(state.phaseBusy)return;if(!auto&&!await confirmSubmitModal({title:'MCQ অংশ জমা দেবেন?',message:'জমা দেওয়ার পর MCQ উত্তর আর পরিবর্তন করা যাবে না, এবং লিখিত অংশের সময় শুরু হবে।',confirmText:'হ্যাঁ, MCQ জমা দিন'}))return;state.phaseBusy=true;clearInterval(timerInterval);try{if(!auto)await saveCurrent();await rpc('lock_mcq_phase',{p_attempt_id:state.attempt.id});await loadExamPayload(state.attempt.id);renderExam();window.scrollTo({top:0});toast(auto?'MCQ-এর সময় শেষ। উত্তর জমা হয়েছে, এবার লিখিত অংশ শুরু হলো।':'MCQ জমা হয়েছে। এবার লিখিত অংশ শুরু হলো।')}catch(e){if(/expired/i.test(String(e?.message||e))){state.phaseBusy=false;return submitExam(true)}err(e);tickTimer()}finally{state.phaseBusy=false}}
 function examQuestionCard(q,i){
-  let opts=q.options||q.exam_question_options||[];
+  let opts=[...(q.options||q.exam_question_options||[])];
+  /* always show options in label order A,B,C,D (ignore the server's random option order) */
+  opts.sort((x,y)=>{const lx=String(x.option_label||'').trim(),ly=String(y.option_label||'').trim();return lx&&ly&&lx!==ly?lx.localeCompare(ly,'bn',{sensitivity:'base'}):0});
   const saved=state.answers[q.id]||{};
   const body=opts.length?opts.map(o=>`<label class="option ${saved.selected_option_id===o.id?'selected':''}"><input type="radio" name="answer-${q.id}" value="${o.id}" ${saved.selected_option_id===o.id?'checked':''}><span><strong>${esc(o.option_label||'')}</strong> ${esc(o.option_text||'')}</span></label>`).join(''):`<div class="field"><label>Your written answer</label><textarea class="written-answer" placeholder="Write your answer here…">${esc(saved.written_answer_text||'')}</textarea></div><div class="answer-upload"><label>Upload answer image/PDF (max 15 MB)<br><input class="answer-file" type="file" accept="image/*,application/pdf"><br><button type="button" class="btn btn-outline btn-sm answer-camera-button" style="margin-top:8px">Take photo with camera</button><input class="answer-camera-file" type="file" accept="image/*" capture="environment" style="display:none"><div class="answer-upload-status" role="status" aria-live="polite" style="margin-top:8px;font-size:13px"></div><div class="answer-file-preview">${answerFilePanelMarkup(saved.answer_image_path,saved.answer_image_url)}</div></label><small>Private answer-script storage</small></div>`;
   return `<section class="panel question-card" id="qcard-${i}" data-qid="${q.id}"><div class="question-number">QUESTION ${i+1} OF ${state.questions.length} · ${esc(q.question_type||'mcq').toUpperCase()}${subjTag(q)}</div><div class="question-text">${esc(q.question_text_snapshot||q.question_text||'')}</div>${body}</section>`;
@@ -572,7 +574,7 @@ async function resultDetail(id){
     console.warn('student_result_review not available, using direct read:',x);
     if(qs.length){const o=await result(sb.from('exam_question_options').select('*').in('exam_question_id',qs.map(q=>q.id)).order('display_order')).catch(()=>[]);optRows=o.map(x=>({qid:x.exam_question_id,id:x.id,label:x.option_label,text:x.option_text,ord:x.display_order,correct:showCorrect?x.is_correct:null}))}
   }
-  const optBy={};optRows.forEach(o=>{(optBy[o.qid]=optBy[o.qid]||[]).push(o)});Object.values(optBy).forEach(l=>l.sort((x,y)=>(x.ord||0)-(y.ord||0)));
+  const optBy={};optRows.forEach(o=>{(optBy[o.qid]=optBy[o.qid]||[]).push(o)});Object.values(optBy).forEach(l=>l.sort((x,y)=>{const lx=String(x.label||'').trim(),ly=String(y.label||'').trim();return lx&&ly&&lx!==ly?lx.localeCompare(ly,'bn',{sensitivity:'base'}):(x.ord||0)-(y.ord||0)}));/* always show options in label order A,B,C,D */
   const baseOut=a?.total_marks??e?.total_marks??null,outOf=baseOut!=null&&e?.include_gpa?n2(Number(baseOut)+10*gpaMultiplier(e)):baseOut;
   const ansBy={};answers.forEach(x=>{ansBy[x.exam_question_id]=x});
   let subjBreak='';
