@@ -13,9 +13,9 @@ window.ADMIRANK_CONFIG = {
   CURRENCY: "৳",
   // Replace these placeholders with the official AdmiRank payment numbers.
   PAYMENT_ACCOUNTS: {
-    bKash: "",
-    Nagad: "",
-    Rocket: ""
+    bKash: "01717146962",
+    Nagad: "01712108137",
+    Rocket: "Currently Unavailable"
   },
   // Landing page content. Leave a value empty to use the built-in default / hide the block.
   LANDING: {
