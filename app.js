@@ -833,6 +833,24 @@ async function evalView(){
   const close=()=>{clearTimeout(advTimer);document.removeEventListener('keydown',key);ov.remove();document.documentElement.style.overflow='';render()};
   const nextUndone=from=>{for(let k=from+1;k<items.length;k++)if(done[items[k].id]==null)return k;return -1};
   let advTimer=null;
+  /* ---- Pen tool: underline / circle wrong words on the script image (stored per script, in this browser) ---- */
+  let tool=null,penColor='#e11d48',penW=3;const ink={},INK='admirank-ev-ink:';
+  const getInk=id=>{if(!ink[id]){try{ink[id]=JSON.parse(localStorage.getItem(INK+id)||'[]')}catch(e){ink[id]=[]}}return ink[id]};
+  const saveInk=id=>{try{const v=ink[id]||[];v.length?localStorage.setItem(INK+id,JSON.stringify(v)):localStorage.removeItem(INK+id)}catch(e){}};
+  function wireInk(a,im){
+    const cv=ov.querySelector('#ev-pen');if(!cv||!im)return;
+    const ctx=cv.getContext('2d');let cur=null;
+    const paint=()=>{const r=window.devicePixelRatio||1,w=cv.width/r,h=cv.height/r;ctx.setTransform(r,0,0,r,0,0);ctx.clearRect(0,0,w,h);ctx.lineCap='round';ctx.lineJoin='round';
+      [...getInk(a.id),...(cur?[cur]:[])].forEach(st=>{ctx.strokeStyle=st.c;ctx.lineWidth=st.w*Math.max(w,300)/800;ctx.beginPath();st.pts.forEach((p,k)=>k?ctx.lineTo(p[0]*w,p[1]*h):ctx.moveTo(p[0]*w,p[1]*h));if(st.pts.length===1)ctx.lineTo(st.pts[0][0]*w+.1,st.pts[0][1]*h);ctx.stroke()})};
+    const fit=()=>{const w=im.clientWidth,h=im.clientHeight;if(!w||!h)return;const r=window.devicePixelRatio||1;cv.style.width=w+'px';cv.style.height=h+'px';cv.width=Math.round(w*r);cv.height=Math.round(h*r);paint()};
+    if(im.complete)fit();im.addEventListener('load',fit);if(window.ResizeObserver)new ResizeObserver(fit).observe(im);
+    const pos=e=>{const b=cv.getBoundingClientRect();return [Math.min(1,Math.max(0,(e.clientX-b.left)/b.width)),Math.min(1,Math.max(0,(e.clientY-b.top)/b.height))]};
+    const eraseAt=p=>{const b=cv.getBoundingClientRect(),list=getInk(a.id),keep=list.filter(st=>!st.pts.some(q=>Math.hypot((q[0]-p[0])*b.width,(q[1]-p[1])*b.height)<14));if(keep.length!==list.length){ink[a.id]=keep;saveInk(a.id);paint()}};
+    cv.onpointerdown=e=>{if(!tool)return;e.preventDefault();cv.setPointerCapture(e.pointerId);const p=pos(e);if(tool==='erase'){cur={erasing:true};eraseAt(p);return}cur={c:penColor,w:penW,pts:[p],start:p}};
+    cv.onpointermove=e=>{if(!cur)return;e.preventDefault();const p=pos(e);if(cur.erasing){eraseAt(p);return}if(tool==='line')cur.pts=[cur.start,p];else cur.pts.push(p);paint()};
+    const end=e=>{if(!cur)return;const c=cur;cur=null;if(!c.erasing&&c.pts.length>1){const [p0,p1]=[c.pts[0],c.pts[c.pts.length-1]];if(tool!=='line'||Math.hypot(p1[0]-p0[0],p1[1]-p0[1])>.004){delete c.start;getInk(a.id).push(c);saveInk(a.id)}}paint()};
+    cv.onpointerup=end;cv.onpointercancel=end;
+  }
   const mark=async v=>{
     const a=items[i];if(!a||busy)return;
     clearTimeout(advTimer);busy=true;pending[a.id]=v;saveState[a.id]='saving';draw();
@@ -860,11 +878,12 @@ async function evalView(){
     finally{busy=false;draw()}
   };
   const go2=d=>{clearTimeout(advTimer);const n=i+d;if(n>=0&&n<items.length){i=n;draw();ov.querySelector('#ev-left')?.scrollTo(0,0)}};
-  function key(e){if(['INPUT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='Escape')close();else if(e.key==='ArrowRight')go2(1);else if(e.key==='ArrowLeft')go2(-1);else if(/^[1-9]$/.test(e.key)){const q=c.qs.find(x=>x.id===items[i].exam_question_id),b=btnsFor(q?.marks)[Number(e.key)-1];if(b!==undefined)mark(b)}}
+  function key(e){if(['INPUT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='Escape')close();else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();const a=items[i];getInk(a.id).pop();saveInk(a.id);draw()}else if(!e.ctrlKey&&!e.metaKey&&e.key.toLowerCase()==='p'){tool=tool?null:'pen';draw()}else if(e.key==='ArrowRight')go2(1);else if(e.key==='ArrowLeft')go2(-1);else if(/^[1-9]$/.test(e.key)){const q=c.qs.find(x=>x.id===items[i].exam_question_id),b=btnsFor(q?.marks)[Number(e.key)-1];if(b!==undefined)mark(b)}}
   document.addEventListener('keydown',key);
   function draw(){
     const a=items[i],q=c.qs.find(x=>x.id===a.exam_question_id)||{},url=c.mediaUrls[a.id],isPdf=/\.pdf($|\?)/i.test(a.answer_image_path||''),d=done[a.id],sel=pending[a.id]!=null?pending[a.id]:d,st=saveState[a.id],left=ov.querySelector('#ev-left')?.scrollTop||0;
-    const media=a.answer_image_path?(url?(isPdf?`<iframe src="${esc(url)}" style="width:100%;height:calc(100vh - 24px);border:0;background:#fff"></iframe>`:`<img src="${esc(url)}" alt="Answer script" style="display:block;width:${zoom?'180%':'100%'};max-width:none;height:auto;cursor:zoom-${zoom?'out':'in'}" id="ev-img">`):'<p class="muted">Could not load the file.</p>'):'';
+    const media=a.answer_image_path?(url?(isPdf?`<iframe src="${esc(url)}" style="width:100%;height:calc(100vh - 24px);border:0;background:#fff"></iframe>`:`<div style="position:relative;width:${zoom?'180%':'100%'}"><img src="${esc(url)}" alt="Answer script" style="display:block;width:100%;max-width:none;height:auto;cursor:${tool?'crosshair':'zoom-'+(zoom?'out':'in')}" id="ev-img"><canvas id="ev-pen" style="position:absolute;left:0;top:0;touch-action:${tool?'none':'auto'};pointer-events:${tool?'auto':'none'};cursor:crosshair"></canvas></div>`):'<p class="muted">Could not load the file.</p>'):'';
+    const nInk=getInk(a.id).length,inkBar=(a.answer_image_path&&!isPdf&&url)?`<div class="notice-card" style="margin-top:18px"><strong>✏️ Pen</strong> <span class="muted" style="font-size:12px">underline wrong / misspelled words</span><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"><button class="btn btn-sm ${tool==='pen'?'btn-primary':'btn-outline'}" data-tool="pen">✏️ Pen</button><button class="btn btn-sm ${tool==='line'?'btn-primary':'btn-outline'}" data-tool="line">╱ Straight</button><button class="btn btn-sm ${tool==='erase'?'btn-primary':'btn-outline'}" data-tool="erase">⌫ Eraser</button></div><div style="display:flex;align-items:center;gap:8px;margin-top:10px">${['#e11d48','#2563eb','#16a34a','#111827'].map(c=>`<button type="button" data-pc="${c}" aria-label="Colour ${c}" style="width:26px;height:26px;border-radius:50%;background:${c};border:${penColor===c?'3px solid #fff;box-shadow:0 0 0 2px '+c:'2px solid transparent'};cursor:pointer"></button>`).join('')}<select id="ev-pw" style="margin-left:6px"><option value="2" ${penW===2?'selected':''}>Thin</option><option value="3" ${penW===3?'selected':''}>Medium</option><option value="6" ${penW===6?'selected':''}>Thick</option></select></div><div style="display:flex;gap:6px;margin-top:10px"><button class="btn btn-outline btn-sm" id="ev-undo" ${nInk?'':'disabled'}>↶ Undo</button><button class="btn btn-outline btn-sm" id="ev-clear" ${nInk?'':'disabled'}>Clear</button></div><p class="muted" style="font-size:11px;margin:8px 0 0">${tool?'Pen is ON — scrolling/zooming by touch is paused. Tap the active tool again to turn it off. ':''}Keys: P pen on/off · Ctrl+Z undo. Marks stay in this browser; students don’t see them.</p></div>`:'';
     ov.innerHTML=`<style>#ev-wrap{display:grid;grid-template-columns:2fr 1fr;height:100%}#ev-left{overflow:auto;padding:12px;background:#10141c}#ev-right{overflow:auto;padding:18px;border-left:1px solid var(--line,#2a3142)}.ev-mark{font-size:22px;font-weight:800;padding:16px 8px;min-width:84px;border:2px solid var(--line,#2a3142);position:relative}.ev-mark.ev-sel{border:4px solid #22c55e;background:rgba(34,197,94,.16);box-shadow:0 0 0 3px rgba(34,197,94,.3);transform:scale(1.04)}.ev-mark.ev-sel::after{content:'✓';position:absolute;top:2px;right:6px;font-size:13px;color:#22c55e}@media(max-width:800px){#ev-wrap{grid-template-columns:1fr;grid-template-rows:60% 40%}#ev-right{border-left:0;border-top:1px solid var(--line,#2a3142)}}</style>
 <div id="ev-wrap"><div id="ev-left">${a.written_answer_text?`<div class="notice-card" style="white-space:pre-wrap">${esc(a.written_answer_text)}</div>`:''}${media}${!media&&!a.written_answer_text?'<p class="muted">No response.</p>':''}</div>
 <div id="ev-right"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><strong>Script ${i+1} / ${items.length}</strong><button class="btn btn-outline btn-sm" id="ev-close">✕ Close</button></div>
@@ -873,11 +892,17 @@ async function evalView(){
 <p style="margin:16px 0 8px"><strong>Marks</strong> <span class="muted">(out of ${q.marks??'?'})</span></p>
 ${st==='saving'?`<div class="notice-card"><strong>Saving…</strong></div>`:d!=null?`<div class="notice-card" style="border-color:#22c55e"><strong>✓ Saved: ${d}</strong><p class="muted" style="margin:6px 0 0;font-size:12px">To change it, click another mark below.</p></div>`:''}<div style="display:flex;flex-wrap:wrap;gap:10px">${btnsFor(q.marks).map((b,k)=>`<button class="btn btn-outline ev-mark ${sel!=null&&Number(sel)===Number(b)?'ev-sel':''}" data-v="${b}" aria-pressed="${sel!=null&&Number(sel)===Number(b)}" ${busy?'disabled':''}>${b}<br><small style="font-weight:400;font-size:11px">key ${k+1}</small></button>`).join('')}</div><p class="muted" style="font-size:12px;margin-top:12px">One click saves the mark (no approval needed) and opens the next script. Wrong click? Open it again with ← and click the right mark.</p>
 <div style="display:flex;gap:8px;margin-top:18px"><button class="btn btn-outline" id="ev-prev" ${i===0?'disabled':''}>← Previous</button><button class="btn btn-outline" id="ev-next" ${i===items.length-1?'disabled':''}>Next →</button>${a.answer_image_path&&!isPdf?`<button class="btn btn-outline" id="ev-zoom">${zoom?'Fit width':'Zoom in'}</button>`:''}</div>
-<div class="field" style="margin-top:18px"><label>Mark buttons (comma separated, e.g. 2.5,1,0)</label><input id="ev-cfg" value="${esc(saved().join(','))}" placeholder="auto: full, half, 0"></div></div></div>`;
+${inkBar}<div class="field" style="margin-top:18px"><label>Mark buttons (comma separated, e.g. 2.5,1,0)</label><input id="ev-cfg" value="${esc(saved().join(','))}" placeholder="auto: full, half, 0"></div></div></div>`;
     ov.querySelector('#ev-left').scrollTop=left;
     ov.querySelector('#ev-close').onclick=close;ov.querySelector('#ev-prev').onclick=()=>go2(-1);ov.querySelector('#ev-next').onclick=()=>go2(1);
     ov.querySelectorAll('.ev-mark').forEach(b=>b.onclick=()=>mark(Number(b.dataset.v)));
-    const z=ov.querySelector('#ev-zoom');if(z)z.onclick=()=>{zoom=!zoom;draw()};const im=ov.querySelector('#ev-img');if(im)im.onclick=()=>{zoom=!zoom;draw()};
+    const z=ov.querySelector('#ev-zoom');if(z)z.onclick=()=>{zoom=!zoom;draw()};const im=ov.querySelector('#ev-img');if(im)im.onclick=()=>{if(tool)return;zoom=!zoom;draw()};
+    wireInk(a,im);
+    ov.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{tool=tool===b.dataset.tool?null:b.dataset.tool;draw()});
+    ov.querySelectorAll('[data-pc]').forEach(b=>b.onclick=()=>{penColor=b.dataset.pc;if(!tool||tool==='erase')tool='pen';draw()});
+    const pw=ov.querySelector('#ev-pw');if(pw)pw.onchange=e=>{penW=Number(e.target.value);draw()};
+    const un=ov.querySelector('#ev-undo');if(un)un.onclick=()=>{getInk(a.id).pop();saveInk(a.id);draw()};
+    const cl=ov.querySelector('#ev-clear');if(cl)cl.onclick=()=>{if(confirm('Remove all pen marks from this script?')){ink[a.id]=[];saveInk(a.id);draw()}};
     ov.querySelector('#ev-cfg').onchange=e=>{localStorage.setItem(KEY,e.target.value.trim());draw()};
   }
   draw();
