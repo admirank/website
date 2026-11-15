@@ -591,6 +591,8 @@ async function resultDetail(id){
     if(ann.error)console.warn('Pen marks could not be loaded:',ann.error);
     else(ann.data||[]).forEach(x=>{if(Array.isArray(x.strokes))inkBy[x.student_answer_id]=(inkBy[x.student_answer_id]||[]).concat(x.strokes)});
   }
+  /* MCQs first, written questions after them (original order kept inside each group) */
+  {const isW=q=>String(q.question_type||'mcq').toLowerCase()==='written';qs=[...qs.filter(q=>!isW(q)),...qs.filter(isW)]}
   /* ---- classify every question ---- */
   const rows=qs.map((q,idx)=>{
     const an=ansBy[q.id]||null,type=String(q.question_type||'mcq').toLowerCase()==='written'?'written':'mcq',opts=optBy[q.id]||[];
